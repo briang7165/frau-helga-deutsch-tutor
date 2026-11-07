@@ -2,7 +2,7 @@
 
 A personal, adaptive German tutor for a self-assessed A2 learner, targeting B1 and beyond. Frau Helga is a fictional older German teacher: strict but kind, dryly funny, precise, and consistent in lessons, dialogue, corrections, and reports.
 
-**Status:** Milestone 1 local prototype approved and merged to `main` via PR #1. No deployment or live services. Real microphone and installed voice quality still require a local hardware check.
+**Status:** Milestone 1 approved and merged to `main` via PR #1. **Milestone 1.1 is specified but not implemented** (see [M1.1 requirements](docs/M1_1_PRODUCT_ENHANCEMENTS.md), [Codex prompt](CODEX_MILESTONE_1_1_PROMPT.md), and [tracking issue #2](https://github.com/briang7165/frau-helga-deutsch-tutor/issues/2)). No deployment or live services. Physical microphone and installed voice quality still need a local check.
 
 ## Run the local prototype
 
@@ -11,18 +11,18 @@ Use Node.js 22.12+ and npm. In the repository folder:
 ```powershell
 git switch main
 git pull
-npm ci
-npm run dev
+npm.cmd ci
+npm.cmd run dev
 ```
 
 Open the local URL printed by Vite (normally `http://127.0.0.1:5173`) in Firefox. No environment variables, credentials, or account setup are required. The server binds to loopback only.
 
 ```powershell
-npm run typecheck
+npm.cmd run typecheck
 npm test
-npm run build
-npx playwright install firefox
-npm run test:firefox
+npm.cmd run build
+npx.cmd playwright install firefox
+npm.cmd run test:firefox
 ```
 
 Playwright starts a temporary local Vite server. If using a custom browser cache, set `PLAYWRIGHT_BROWSERS_PATH` to that directory for both installation and testing. See [Playwright's browser installation documentation](https://playwright.dev/docs/browsers).
