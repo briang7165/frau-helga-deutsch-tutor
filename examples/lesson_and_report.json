@@ -1,0 +1,84 @@
+{
+  "fictional_demo": true,
+  "lesson": {
+    "id": "demo-a2-01",
+    "title": "Ein Wochenende in Frankfurt",
+    "target_minutes": 30,
+    "level": "A2 (self-assessed)",
+    "activities": [
+      {
+        "id": "v1",
+        "type": "vocabulary",
+        "skill": "vocabulary",
+        "topic": "weekend",
+        "prompt_de": "Was bedeutet 'der Ausflug'?",
+        "choices": [
+          "a trip",
+          "a suitcase",
+          "a restaurant"
+        ],
+        "correct_index": 0
+      },
+      {
+        "id": "r1",
+        "type": "reading",
+        "skill": "reading",
+        "topic": "comprehension",
+        "passage_de": "Am Samstag fährt Lena mit dem Zug nach Mainz. Dort besucht sie ihre Schwester.",
+        "prompt_de": "Wohin fährt Lena am Samstag?",
+        "expected": "Nach Mainz."
+      },
+      {
+        "id": "w1",
+        "type": "writing",
+        "skill": "writing",
+        "topic": "dative",
+        "prompt_en": "Write in German: I am going to the park with my friend.",
+        "sample_answer": "Ich gehe mit meinem Freund in den Park.",
+        "rubric_topics": [
+          "mit + Dativ",
+          "direction in den Park"
+        ]
+      },
+      {
+        "id": "s1",
+        "type": "speaking",
+        "skill": "speaking",
+        "topic": "small-talk",
+        "prompt_de": "Was machen Sie am Wochenende?",
+        "manual_transcript_example": "Ich besuche meine Familie."
+      },
+      {
+        "id": "l1",
+        "type": "listening",
+        "skill": "listening",
+        "topic": "daily-life",
+        "utterance_de": "Ich kaufe am Freitag frisches Brot.",
+        "prompt_en": "What does the teacher buy on Friday?",
+        "expected": "Fresh bread."
+      }
+    ]
+  },
+  "report_preview": {
+    "status": "PREVIEW_NOT_SENT",
+    "teacher": "Frau Helga",
+    "scores_are_example_only": true,
+    "skill_scores": {
+      "reading": 80,
+      "writing": 70,
+      "listening": 90,
+      "speaking": 60,
+      "vocabulary": 80
+    },
+    "strengths": [
+      "Weekend vocabulary"
+    ],
+    "improve": [
+      "Dative after mit"
+    ],
+    "next_objectives": [
+      "Review dative articles",
+      "Practice a short dialogue"
+    ]
+  }
+}
