@@ -12,6 +12,8 @@ export interface WordHelpProvider {
   lookup(term: string, activity: Activity): WordEntry | string;
 }
 const dictionary: Record<string, [string, string, string]> = {
+  wald: ["forest", "der Wald; plural: die Wälder.", "Der Wald ist ruhig."],
+  hof: ["courtyard", "der Hof; plural: die Höfe.", "Im Hof steht ein Fahrrad."],
   mit: [
     "with",
     "Preposition; takes the dative case.",

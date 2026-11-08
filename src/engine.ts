@@ -179,7 +179,7 @@ export function grade(a: Activity, answer: string, assisted = false): Attempt {
       a.model.match(/in den (\w+)/)?.[1].toLowerCase() ?? "park";
     // Whole-sentence templates, not a bag of keywords. Unknown clauses stay unscored.
     const match = n.match(
-      /^ich (gehe|gehen|gehst) (?:mit (mein(?:em|en|er|e)? )?(freund|freundin) in (?:den |dem |der )?(park|garten|zoo)|in (?:den |dem |der )?(park|garten|zoo) mit (mein(?:em|en|er|e)? )?(freund|freundin))$/,
+      /^ich (gehe|gehen|gehst) (?:mit (mein(?:em|en|er|e)? )?(freund|freundin) in (?:den |dem |der )?(park|garten|zoo|wald|hof)|in (?:den |dem |der )?(park|garten|zoo|wald|hof) mit (mein(?:em|en|er|e)? )?(freund|freundin))$/,
     );
     if (match) {
       const place = match[4] ?? match[5];
@@ -287,7 +287,7 @@ export function assessmentActivities(variant = 0): Activity[] {
     ["Tomaten", "tomatoes"],
     ["Kartoffeln", "potatoes"],
   ][v];
-  const place = ["Garten", "Zoo", "Park", "Garten"][v];
+  const place = ["Garten", "Zoo", "Wald", "Hof"][v];
   const town = towns[v];
   const prefix = `a${v}-`;
   return [
@@ -315,7 +315,7 @@ export function assessmentActivities(variant = 0): Activity[] {
       ...activities[2],
       id: prefix + "w",
       title: "Plan a walk",
-      prompt: `Translate into German: I am going to the ${["garden", "zoo", "park", "garden"][v]} with my friend.`,
+      prompt: `Translate into German: I am going to the ${["garden", "zoo", "forest", "courtyard"][v]} with my friend.`,
       accepted: [
         `Ich gehe mit meinem Freund in den ${place}`,
         `Ich gehe mit meiner Freundin in den ${place}`,
@@ -446,18 +446,14 @@ export function trend(history: Session[]) {
 }
 export function rewards(history: Session[], now = new Date()) {
   const completed = history.filter((s) => s.completedAt);
-  const xp = completed.reduce(
-    (n, s) =>
-      n +
-      10 +
-      s.attempts.filter(
-        (t, i, all) =>
-          t.status !== "skipped" &&
-          all.findIndex((x) => x.activityId === t.activityId) === i,
-      ).length *
-        5,
-    0,
-  );
+  const xp = completed.reduce((n, s) => {
+    const attempted = s.attempts.filter(
+      (t, i, all) =>
+        t.status !== "skipped" &&
+        all.findIndex((x) => x.activityId === t.activityId) === i,
+    ).length;
+    return n + (attempted ? 10 + attempted * 5 : 0);
+  }, 0);
   const mastered = skills.filter((skill) =>
     completed.some((s) => {
       const b = breakdown(s, skill);

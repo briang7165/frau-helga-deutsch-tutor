@@ -233,6 +233,11 @@ describe("non-destructive migration and validation", () => {
   });
 });
 describe("assessments, rewards and hints", () => {
+  it("does not award XP for a session consisting entirely of skips", () => {
+    const s = finished("all-skips", "2026-11-01T12:00:00");
+    s.attempts = activities.map((a) => unscored(a, "skipped"));
+    expect(rewards([s]).xp).toBe(0);
+  });
   it("offers a check after five lessons or seven calendar days", () => {
     const h = Array.from({ length: 5 }, (_, i) =>
       finished(`f${i}`, "2026-11-01T12:00:00"),
