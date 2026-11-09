@@ -55,6 +55,12 @@ M2+ authentication, live AI, real audio transcription, authorized email/feedback
 
 ## Development and privacy
 
+### M1.2 optional voice (separate review)
+
+The `feature/m1-2-elevenlabs-tts` branch adds a loopback-only Node speech proxy and explicit ElevenLabs opt-in, disabled by default. Credentials and the selected voice ID stay in ignored private server configuration. Existing progress and microphone behavior are unchanged. See [local setup and authorized live-test steps](docs/M1_2_ELEVENLABS_SETUP.md) and the [future Worker design](docs/M1_2_WORKER_DESIGN.md). This work depends on pending PR #3; no merge, live test, billing or deployment is authorized by the implementation.
+
+Verification: 67 unit tests and 23 Firefox tests PASS; application and server typechecks, production build, client secret scan and dependency audit PASS (0 vulnerabilities). The disabled compiled server starts successfully on loopback. Live ElevenLabs synthesis and real voice quality are NOT RUN; automated provider responses and browser audio are mocked.
+
 Read `AGENTS.md`, `CODEX_MILESTONE_1_1_PROMPT.md`, the M1.1 requirements and the architecture/persona/privacy documents before editing. Work on `feature/m1-1-learning-ux` from main and open a PR for review.
 
 This repository is public by user choice. Never commit learner records, transcripts, microphone recordings, family email addresses, credentials, private messages, OneDrive exports or copyrighted textbooks. The original specification example JSON is fictional, and its illustrative scores are never imported as learner achievements.

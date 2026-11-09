@@ -12,7 +12,10 @@
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:firefox": "playwright test --project=firefox"
+    "test:firefox": "playwright test --project=firefox",
+    "voice:server": "tsc -p server/tsconfig.json && node --env-file=private/.env.voice build/voice/server/index.js",
+    "voice:typecheck": "tsc -p server/tsconfig.json --noEmit",
+    "test:voice-bundle": "node scripts/check-voice-bundle.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
