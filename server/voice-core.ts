@@ -132,14 +132,24 @@ export class VoiceService {
       if (
         subscription.tier !== "free" ||
         subscription.can_extend_character_limit !== false ||
-        subscription.allowed_to_extend_character_limit !== false ||
-        subscription.max_character_limit_extension !== 0 ||
+        // Current field is mandatory: never infer a disabled billing cap from
+        // deprecated fields. Null/omitted legacy values are normal, but an
+        // explicit contradictory or malformed legacy value still fails closed.
+        subscription.max_credit_limit_extension !== 0 ||
+        (subscription.allowed_to_extend_character_limit != null &&
+          subscription.allowed_to_extend_character_limit !== false) ||
+        (subscription.max_character_limit_extension != null &&
+          subscription.max_character_limit_extension !== 0) ||
         subscription.has_open_invoices !== false ||
         !Number.isSafeInteger(subscription.character_count) ||
         subscription.character_count < 0 ||
         !Number.isSafeInteger(subscription.character_limit) ||
         subscription.character_limit <= 0 ||
-        Number(subscription.current_overage?.amount) !== 0
+        !(
+          (typeof subscription.current_overage?.amount === "string" &&
+            /^0(?:\.0+)?$/.test(subscription.current_overage.amount)) ||
+          subscription.current_overage?.amount === 0
+        )
       )
         throw new VoiceError("quota", 403);
       const models = await this.json("models", controller.signal);

@@ -31,6 +31,7 @@ const subscription = {
   can_extend_character_limit: false,
   allowed_to_extend_character_limit: false,
   max_character_limit_extension: 0,
+  max_credit_limit_extension: 0,
   has_open_invoices: false,
   current_overage: { amount: "0" },
   character_count: 0,
@@ -128,6 +129,77 @@ describe("secure opt-in and validation", () => {
   });
 });
 describe("account, model, voice and credit checks", () => {
+  it.each([
+    {},
+    {
+      allowed_to_extend_character_limit: null,
+      max_character_limit_extension: null,
+    },
+    {
+      allowed_to_extend_character_limit: false,
+      max_character_limit_extension: null,
+    },
+    {
+      allowed_to_extend_character_limit: null,
+      max_character_limit_extension: 0,
+    },
+  ])(
+    "accepts a current free account with absent/null deprecated fields %j",
+    async (legacy) => {
+      const current: Record<string, unknown> = { ...subscription };
+      delete current.allowed_to_extend_character_limit;
+      delete current.max_character_limit_extension;
+      const f = mockUpstream({ subscription: { ...current, ...legacy } });
+      const l = ledger();
+      await expect(
+        new VoiceService(config, l, f).speak(request),
+      ).resolves.toMatchObject({ cached: false });
+      expect(f).toHaveBeenCalledTimes(4);
+      expect(l.reserve).toHaveBeenCalledWith(
+        VOICE_TEST_TEXT.length,
+        expect.any(Date),
+      );
+    },
+  );
+  it.each([
+    { max_credit_limit_extension: undefined },
+    { max_credit_limit_extension: null },
+    { max_credit_limit_extension: "unlimited" },
+    { max_credit_limit_extension: 1000 },
+    { max_credit_limit_extension: -1 },
+    { max_credit_limit_extension: "0" },
+    { max_credit_limit_extension: false },
+    { max_credit_limit_extension: {} },
+    { allowed_to_extend_character_limit: true },
+    { allowed_to_extend_character_limit: "false" },
+    { max_character_limit_extension: 1000 },
+    { max_character_limit_extension: "0" },
+    { can_extend_character_limit: true },
+    { can_extend_character_limit: undefined },
+    { can_extend_character_limit: null },
+    { tier: undefined },
+    { tier: "starter" },
+    { has_open_invoices: null },
+    { has_open_invoices: true },
+    { current_overage: undefined },
+    { current_overage: null },
+    { current_overage: { amount: null } },
+    { current_overage: { amount: false } },
+    { current_overage: { amount: "" } },
+    { current_overage: { amount: "0.01" } },
+  ])(
+    "rejects ambiguous or contradictory billing metadata before synthesis %j",
+    async (patch) => {
+      const f = mockUpstream({ subscription: { ...subscription, ...patch } });
+      const l = ledger();
+      await expect(
+        new VoiceService(config, l, f).speak(request),
+      ).rejects.toMatchObject({ code: "quota" });
+      expect(f).toHaveBeenCalledTimes(1);
+      expect(String(f.mock.calls[0][0])).toMatch(/\/user\/subscription$/);
+      expect(l.reserve).not.toHaveBeenCalled();
+    },
+  );
   it.each([
     { tier: "starter" },
     { allowed_to_extend_character_limit: true },

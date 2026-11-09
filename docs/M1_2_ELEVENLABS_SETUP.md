@@ -35,6 +35,8 @@ No live test has been run. Account metadata, the selected voice's availability/l
 
 ## Limits and data handling
 
+Subscription preflight requires `max_credit_limit_extension` to be numeric `0`, a free tier, `can_extend_character_limit=false`, no open invoices, an explicit zero overage amount, and valid remaining quota. Missing or null deprecated `allowed_to_extend_character_limit` and `max_character_limit_extension` values are accepted only when those current checks pass. Present legacy values must still be `false` and `0`, respectively; contradictions fail closed. Missing/null current caps, `"unlimited"`, positive caps and malformed values block synthesis. Model rates, German support and selected voice access are still checked before budget reservation and synthesis.
+
 | Control | Bound |
 | --- | --- |
 | Request | 300 characters; authored text allowlist only |
