@@ -880,3 +880,264 @@ details summary {
     scroll-behavior: auto !important;
   }
 }
+/* M1.1: instructions, settings, rewards and diagnostics */
+.instructions {
+  padding: 18px;
+  margin: 16px 0;
+  background: #edf2e7;
+  border-left: 4px solid #264f42;
+  border-radius: 4px;
+}
+.instructions strong {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+.instructions p {
+  margin: 10px 0;
+}
+.instructions small {
+  display: block;
+  font-size: 0.8rem;
+}
+.global-sound {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 490px;
+  font-size: 0.75rem;
+}
+.global-sound label {
+  max-width: 150px;
+}
+.global-sound button {
+  font-size: 0.75rem;
+}
+.global-sound input {
+  display: block;
+  width: 100%;
+}
+.weekly {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  margin: -10px 0 25px;
+}
+.weekly progress {
+  accent-color: #45664c;
+  height: 9px;
+}
+.settings {
+  max-width: 900px;
+}
+.settings fieldset {
+  border: 1px solid #bccbb3;
+  border-radius: 7px;
+  padding: 22px;
+  margin: 25px 0;
+}
+.settings legend {
+  font:
+    1.35rem Georgia,
+    serif;
+  padding: 0 8px;
+}
+.settings label {
+  display: block;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.settings p,
+.settings small {
+  font-size: 0.85rem;
+}
+.settings input:not([type="checkbox"]),
+.settings select {
+  display: block;
+  width: 100%;
+  max-width: 450px;
+}
+.settings input[type="number"],
+.word-help input {
+  border: 1px solid #93a288;
+  border-radius: 5px;
+  padding: 9px;
+  background: #fffef9;
+  color: #233c33;
+  font: inherit;
+}
+.settings button {
+  margin: 5px 8px 5px 0;
+}
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+  accent-color: #264f42;
+}
+input:focus-visible {
+  outline: 3px solid #b0762c;
+  outline-offset: 3px;
+}
+.word-help {
+  margin: 15px 0;
+  font-size: 0.8rem;
+  position: relative;
+}
+.word-help button {
+  font-size: 0.75rem;
+  padding: 7px 9px;
+}
+.word-help input {
+  width: 100%;
+}
+.word-popup {
+  margin: 12px 0;
+  max-width: 480px;
+  padding: 18px;
+  border: 2px solid #8fa482;
+  background: #fffdf5;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #22332214;
+}
+.word-popup h4 {
+  font:
+    1.4rem Georgia,
+    serif;
+  margin: 15px 0;
+}
+.feedback.needs_review {
+  background: #eef0ef;
+  border-color: #879d9b;
+}
+.feedback.partial {
+  background: #f8f1df;
+  border-color: #b2985b;
+}
+.feedback.incorrect {
+  background: #f9eee5;
+  border-color: #bd8555;
+}
+.microphone meter {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: 14px;
+}
+.replay {
+  padding: 12px 0;
+}
+.replay button {
+  margin: 8px 8px 0 0;
+}
+.celebration {
+  background: #f3ecd1;
+  padding: 12px 20px;
+  border-radius: 5px;
+}
+.celebration span {
+  display: inline-block;
+  animation: star-hello 0.6s ease-out;
+  color: #856414;
+}
+@keyframes star-hello {
+  from {
+    transform: scale(0.5) rotate(-15deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+html[data-contrast="high"] {
+  filter: contrast(1.35);
+}
+html[data-contrast="high"] small,
+html[data-contrast="high"] .muted,
+html[data-contrast="high"] .eyebrow {
+  color: #20362b;
+}
+/* Scale the inherited interface alongside the selected reading size. */
+main {
+  font-size: 1rem;
+}
+.exercise h3 {
+  font-size: 1.3rem;
+}
+.exercise blockquote {
+  font-size: 1.3rem;
+}
+.exercise label,
+.exercise .input-help {
+  font-size: 0.85rem;
+}
+.feedback,
+.section-review,
+.coach-card p,
+.report > p {
+  font-size: 0.9rem;
+}
+@media (max-width: 700px) {
+  .topbar {
+    height: auto;
+    min-height: 100px;
+    gap: 10px;
+    padding: 15px;
+    align-items: flex-start;
+  }
+  .brand {
+    font-size: 20px;
+    gap: 8px;
+  }
+  .brand small {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .monogram {
+    width: 35px;
+    height: 35px;
+    font-size: 15px;
+  }
+  .global-sound {
+    max-width: 150px;
+    gap: 4px;
+  }
+  .global-sound small {
+    font-size: 9px;
+  }
+  .sidebar {
+    padding: 10px;
+  }
+  .sidebar nav button {
+    padding: 8px;
+  }
+  .sidebar nav button span {
+    margin-left: 5px;
+    font-size: 12px;
+  }
+  .settings fieldset {
+    padding: 14px;
+  }
+  .settings {
+    padding: 15px;
+  }
+  .word-help .actions {
+    gap: 5px;
+  }
+}

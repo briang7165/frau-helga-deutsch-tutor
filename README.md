@@ -1,74 +1,60 @@
 # Frau Helga — Deutsch Coach
 
-A personal, adaptive German tutor for a self-assessed A2 learner, targeting B1 and beyond. Frau Helga is a fictional older German teacher: strict but kind, dryly funny, precise, and consistent in lessons, dialogue, corrections, and reports.
+A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestone 1 is approved and merged. **Milestone 1.1 is implemented on `feature/m1-1-learning-ux` and awaits pull-request review.** No deployment or live services.
 
-**Status:** Milestone 1 approved and merged to `main` via PR #1. **Milestone 1.1 is specified but not implemented** (see [M1.1 requirements](docs/M1_1_PRODUCT_ENHANCEMENTS.md), [Codex prompt](CODEX_MILESTONE_1_1_PROMPT.md), and [tracking issue #2](https://github.com/briang7165/frau-helga-deutsch-tutor/issues/2)). No deployment or live services. Physical microphone and installed voice quality still need a local check.
+## Run locally on Windows
 
-## Run the local prototype
-
-Use Node.js 22.12+ and npm. In the repository folder:
+Use Node.js 22.12+ and npm. From your repository folder:
 
 ```powershell
-git switch main
-git pull
+git fetch origin
+git switch feature/m1-1-learning-ux
 npm.cmd ci
 npm.cmd run dev
 ```
 
-Open the local URL printed by Vite (normally `http://127.0.0.1:5173`) in Firefox. No environment variables, credentials, or account setup are required. The server binds to loopback only.
+Open the local Vite URL in Firefox, normally `http://127.0.0.1:5173`. Keep the same browser profile, host and port you used for M1 to preserve access to its localStorage. `localhost` and `127.0.0.1` are different storage origins. No credentials or environment variables are needed. `npm.cmd` and `npx.cmd` work when PowerShell policy blocks `.ps1` wrappers.
 
 ```powershell
 npm.cmd run typecheck
-npm test
+npm.cmd test
 npm.cmd run build
 npx.cmd playwright install firefox
 npm.cmd run test:firefox
+npm.cmd audit
 ```
 
-Playwright starts a temporary local Vite server. If using a custom browser cache, set `PLAYWRIGHT_BROWSERS_PATH` to that directory for both installation and testing. See [Playwright's browser installation documentation](https://playwright.dev/docs/browsers).
+Firefox tests start their own local server on port **4173**, independently of your normal app on 5173. They use isolated fictional browser data. If you set `PLAYWRIGHT_BROWSERS_PATH` for installation, use the same value for tests.
 
-### What M1 does
+## M1.1 learning experience
 
-- Original six-activity A2 lesson: vocabulary, reading, dative writing, listening, sentence repetition, and scripted dialogue. The target is 30 minutes of deliberate practice, not a minimum duration or a countdown.
-- Pause/resume and reload recovery. Reloads and background tabs pause the lesson. Active time is checkpointed every second; an abrupt close can lose the last partial second.
-- Scores use the first submitted answer per activity; skips and unrecognized answers receive zero. Repetition is practice and never inflates grades. Minor capitalization corrections appear in section review; known grammar errors receive immediate feedback and an alternative explanation after two errors.
-- Deterministic pattern matching, not general AI assessment. Other valid German answers may be unrecognized. Read the model answers and rubric limitations. Speaking scores assess manual text only, never pronunciation.
-- Hold-to-talk using `getUserMedia` / `MediaRecorder`. Release, cancel, pause, navigation, or leaving the tab releases tracks and discards audio. There is no automatic transcription. Manual transcript input always works without microphone permission.
-- Optional installed, **local-only de-DE** speech synthesis voices. No suitable voice means text fallback; no remote speech service is used.
-- Recent local lesson history, streaks, skill scores, and a factual **PREVIEW — NOT SENT** spouse report. No recipient settings and no email delivery.
-- Saves only outcome codes, scores, timestamps, and elapsed time under `frau-helga-m1-v1` in localStorage. Free-text answers and audio are never persisted. Use **Clear local progress** to remove saved demo state. Storage failure shows a warning and does not block practice.
+- Six original daily activities cover vocabulary, reading, writing, listening and speaking. Prominent English instructions explain the response language and scoring before each question. The daily target defaults to 30 minutes and is adjustable; active time is measured, not fabricated.
+- First-attempt rubrics award partial credit. In constrained writing, meaning contributes 40 points, verb/tense 25, word order 20, and articles/case/spelling 15. A wrong article with otherwise correct wording earns 90%. Known variants and selected spelling errors are recognized. Unknown plausible answers are **Needs review — unscored**, not automatically zero. Skips and review items are excluded from averages, with denominators shown.
+- Help explains grammar concepts or a selected German word. Keyboard lookup, article/plural/form information, short original examples and optional pronunciation are available. Full passages and tested answer terms are not translated or supplied. Hints are marked assisted without a score penalty.
+- Settings persist: sound/voice volume and rate, daily target, correction detail, review frequency, assessment cadence, help visibility, spelling, text size, contrast, reduced motion and privacy choices. A2 and English are the supported content modes. Restore defaults keeps progress.
+- Earn XP, Goldsterne and practice badges; see streaks and a weekly challenge. XP never changes grades. Skipping every activity earns no XP. Original synthesized effects are off/muted by default, have global mute/volume controls, and respect the user's sound choice. Motion respects both app and system preferences.
+- Optional progress checks become due after seven calendar days or five lessons by default. Four original deterministic forms rotate across the five skills. Comparisons show assessed coverage and skill-specific needs; results remain self-assessed/non-certified.
+- Firefox recording includes permission/device diagnostics, input level and duration, local replay with consent, and explicit discard. Hold with the pointer or Space/Enter; release stops recording. Clips are memory-only, discarded on pause/navigation/tab departure, and never uploaded. **There is no automatic transcription or pronunciation assessment.** Manual text is always available.
+- German voice discovery includes de-DE, de-AT and de-CH. Local/remote labels, persisted selection and preview controls are available. Remote browser voices are blocked unless deliberately selected and explicitly allowed in Settings. No Gemini, ElevenLabs or paid provider is configured.
+- German spellcheck and English spellcheck have separate controls. Firefox needs an installed dictionary; the input language attribute cannot install it. Turn German spellcheck off if English red squiggles are distracting.
+- Every completed session has an outcome-based **PREVIEW — NOT SENT** report, with assessed and unassessed work clearly separated. Nothing is emailed.
 
-The example JSON is a fictional specification fixture; its illustrative scores are not imported as learner achievements. The dashboard starts at zero. Each completed practice session adds actual outcomes from the local demo. A2 is self-assessed and no certified CEFR result is inferred.
+## Existing data is preserved
 
-Implementation and verification details: [M1 acceptance report](docs/M1_ACCEPTANCE_REPORT.md).
+M1's `frau-helga-m1-v1` key is retained unchanged during migration. M1.1 writes validated outcomes to `frau-helga-progress-v2`; settings use `frau-helga-settings-v1`. Historical assessed grades are retained. Old unrecognized/skipped zeroes become unscored, with the original value retained as migration metadata. Completed lessons, elapsed time, dates and paused lesson position survive.
 
-## User-approved requirements
+Unknown/corrupt saved progress is not silently overwritten. Export/import validates and reconstructs allowed data fields; imports merge completed lessons by ID and retain existing records on conflicts. Explicit progress deletion removes both progress versions after confirmation. Backups contain structured learner outcomes and preferences, never raw responses, clips, accounts or secrets, and should still be kept private.
 
-- PC/Firefox first; mobile-friendly web UI and later PWA/Android option.
-- Flexible 30-minute daily lessons with pause/resume, covering reading, writing, listening, vocabulary and speaking.
-- Hybrid structured lessons and AI conversations; skill mix adapts to weak areas.
-- Immediate correction for major errors, deferred review for minor ones.
-- Personal progress, streaks, scores, CEFR estimates clearly labeled as non-certified, and spaced repetition.
-- Detailed report after each lesson to spouse, with strengths, mistakes, objectives. Spouse can reply to email or use a simple feedback form. Valid suggestions may influence future lessons.
-- A dedicated Gmail sender has been selected; store its literal address **only in private configuration**, not in this public repository.
-- Gemini free-tier-first; Cloudflare Workers + D1 for a future authenticated deployment.
-- Google account sign-in is planned for later; no credentials in Milestone 1.
-- $0 preferred; **$5/month ceiling** for future authorized services, never automatic permission to enable billing.
-- OneDrive backup planned later; copyrighted textbooks remain outside GitHub, with topic maps and original exercises only.
-- No lesson reminder requirement; users open lessons when ready.
+## Review and boundaries
 
-## Milestones
+See [M1.1 acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for the changed-file list, exact test results, migration details and manual Firefox checklist. The [M1.1 requirements](docs/M1_1_PRODUCT_ENHANCEMENTS.md) and [task prompt](CODEX_MILESTONE_1_1_PROMPT.md) define this milestone.
 
-1. **M1 — Local prototype:** React, TypeScript, Vite, fully local with deterministic mock data and adapters. Firefox-first classroom UI, demo A2 lesson, scripted conversation, microphone controls and manual transcript fallback, German speech synthesis if available, scoring based on actual attempts, local saved progress and spouse report **PREVIEW / NOT SENT**. Unit + Playwright Firefox tests.
-2. **M2 — Hosted foundation:** Google sign-in allowlist, Cloudflare Worker + D1, secure persistence, Gemini text calls; only after review.
-3. **M3 — Real speech and communication:** Gemini-based audio transcription, voice adapter, Gmail sender and validated spouse feedback; only after explicit authorization.
-4. **M4 — Adaptive curriculum:** mastery tracking, review scheduling, trends, export/authorized OneDrive backups.
-5. **M5 — Android:** installable PWA, optional Android APK with shared backend.
+The local dictionary and grading rules are deliberately bounded. Other valid wording may need review; no live reviewer or AI receives it. Assessment forms eventually repeat. Real microphone quality, audible voice quality and installed spellcheck dictionaries need a check on your device. Free-text drafts are not persisted; abrupt closure can lose the last partial second of elapsed time.
 
-## Development instructions
+M2+ authentication, live AI, real audio transcription, authorized email/feedback, cloud storage, OneDrive and Android work remain unstarted. No merge or deployment without user review. A future $5/month ceiling is not permission to activate billing.
 
-Read `AGENTS.md`, `CODEX_MILESTONE_1_PROMPT.md`, all files in `docs/`, and `examples/lesson_and_report.json`. Implement **only M1** on branch `feature/m1-local-prototype`. Do not merge, deploy, send email, call Gemini, provision Cloudflare, or add billing without a separate user request.
+## Development and privacy
 
-## Privacy
+Read `AGENTS.md`, `CODEX_MILESTONE_1_1_PROMPT.md`, the M1.1 requirements and the architecture/persona/privacy documents before editing. Work on `feature/m1-1-learning-ux` from main and open a PR for review.
 
-This code repository is **public by user choice**, but learner records, transcripts, microphone audio, family email addresses, Google OAuth secrets, API keys, OneDrive data and copyrighted book files are not public. Do not commit or publish them.
+This repository is public by user choice. Never commit learner records, transcripts, microphone recordings, family email addresses, credentials, private messages, OneDrive exports or copyrighted textbooks. The original specification example JSON is fictional, and its illustrative scores are never imported as learner achievements.
