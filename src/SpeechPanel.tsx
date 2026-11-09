@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { browserSpeechProvider as speech } from "./providers";
 import { useSettings } from "./preferences";
 import { clock } from "./domain";
+import { ExternalSpeechControls } from "./external-voice/controls";
 export function VoiceControls({
   text,
   preview = false,
@@ -31,6 +32,17 @@ export function VoiceControls({
     (!s.voiceURI ? voices.find((v) => v.localService) : undefined);
   return (
     <div className="voice-controls">
+      {!preview && (
+        <ExternalSpeechControls
+          text={text}
+          options={{
+            enabled: s.voiceEnabled,
+            volume: s.voiceVolume,
+            rate: s.rate,
+            voiceURI: s.voiceURI,
+          }}
+        />
+      )}
       <label>
         German voice
         <select

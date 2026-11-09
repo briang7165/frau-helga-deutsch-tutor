@@ -4,6 +4,7 @@ import { decodeState } from "./persistence";
 import type { State } from "./domain";
 import { VoiceControls, MicrophoneControls } from "./SpeechControls";
 import { sounds } from "./sounds";
+import { ExternalVoiceSettings } from "./external-voice/controls";
 export function SettingsPanel({
   state,
   onImport,
@@ -76,6 +77,14 @@ export function SettingsPanel({
   }
   return (
     <section className="card settings">
+      <ExternalVoiceSettings
+        options={{
+          enabled: s.voiceEnabled,
+          volume: s.voiceVolume,
+          rate: s.rate,
+          voiceURI: s.voiceURI,
+        }}
+      />
       <h2>Settings</h2>
       <p>Changes apply immediately and stay on this device.</p>
       {settingsWarning && <p role="alert">{settingsWarning}</p>}
