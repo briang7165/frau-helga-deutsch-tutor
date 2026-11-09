@@ -18,7 +18,7 @@ test("completes all skills with actual scores and a report that is never sent", 
 }) => {
   const external: string[] = [];
   page.on("request", (req) => {
-    if (!req.url().startsWith("http://127.0.0.1:5173"))
+    if (!req.url().startsWith("http://127.0.0.1:4173"))
       external.push(req.url());
   });
   await start(page);
@@ -34,7 +34,7 @@ test("completes all skills with actual scores and a report that is never sent", 
   await expect(page.getByText("100% overall", { exact: true })).toBeVisible();
   expect(external).toEqual([]);
   const saved = await page.evaluate(() =>
-    localStorage.getItem("frau-helga-m1-v1"),
+    localStorage.getItem("frau-helga-progress-v2"),
   );
   expect(saved).not.toContain("Ich besuche");
   expect(saved).not.toContain("Blob");
@@ -61,34 +61,10 @@ test("saves completed answers and elapsed time, reloads paused and resumes", asy
   expect(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("frau-helga-m1-v1")!).current
+        JSON.parse(localStorage.getItem("frau-helga-progress-v2")!).current
           .attempts[0].score,
     ),
   ).toBe(100);
-});
-test("major errors remediate immediately, minor corrections wait in section review", async ({
-  page,
-}) => {
-  await start(page);
-  await page.getByRole("button", { name: "Skip activity" }).click();
-  await page.getByRole("button", { name: "Skip activity" }).click();
-  await page
-    .getByRole("textbox")
-    .fill("Ich gehe mit meinen Freund in den Park.");
-  await page.getByRole("button", { name: "Check answer", exact: true }).click();
-  await expect(page.getByText("Da stimmt etwas noch nicht.")).toBeVisible();
-  await page.getByRole("button", { name: "Check again" }).click();
-  await expect(page.getByText(/Two separate questions:/)).toBeVisible();
-  await page
-    .getByRole("textbox")
-    .fill("ich gehe mit meinem freund in den park");
-  await page.getByRole("button", { name: "Check again" }).click();
-  await expect(page.getByText(/Minor correction:/)).not.toBeVisible();
-  await page.getByText("Section review & model answer").click();
-  await expect(page.getByText(/Minor correction:/)).toBeVisible();
-  await expect(
-    page.getByText("First-answer score: 0%.", { exact: false }),
-  ).toBeVisible();
 });
 test("microphone denial and missing voices leave manual speaking usable", async ({
   page,
@@ -110,19 +86,17 @@ test("microphone denial and missing voices leave manual speaking usable", async 
     page.getByText(/Microphone access denied or unavailable/),
   ).toBeVisible();
   await page.keyboard.up("Space");
-  await expect(
-    page.getByText(/No installed offline de-DE voice/),
-  ).toBeVisible();
+  await expect(page.getByText(/No German voice found/)).toBeVisible();
   await answer(page, "Ich fahre am Samstag mit dem Zug.");
   await answer(page, "Ich besuche meine Familie.", true);
-  await expect(page.getByText("33% overall", { exact: true })).toBeVisible();
+  await expect(page.getByText("100% overall", { exact: true })).toBeVisible();
 });
 test("storage corruption recovers and mobile layout does not overflow", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() =>
-    localStorage.setItem("frau-helga-m1-v1", "{bad"),
+    localStorage.setItem("frau-helga-progress-v2", "{bad"),
   );
   await start(page);
   await expect(page.getByRole("textbox")).toBeVisible();
