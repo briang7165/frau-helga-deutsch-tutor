@@ -26,6 +26,7 @@ export class SoundPlayer {
       const token = this.generation;
       this.context ??= new AudioContext();
       await this.context.resume();
+      if (this.context?.state === "suspended") return false;
       if (token !== this.generation || !this.context) return false;
       const oscillator = this.context.createOscillator(),
         gain = this.context.createGain();

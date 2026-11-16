@@ -81,7 +81,7 @@ describe("activity-specific, explainable rubrics", () => {
   });
   it("recognizes incompatible meaning in constrained exercises", () => {
     expect(grade(activities[0], "a suitcase").status).toBe("incorrect");
-    expect(grade(activities[1], "Nach Berlin.").score).toBe(0);
+    expect(grade(activities[1], "Nach Berlin.").score).toBe(40); // Language/task credit only; destination 0/60.
   });
   it("gives speaking text credit only, with no pronunciation claim", () => {
     const a = grade(activities[5], "Ich lese ein Buch");

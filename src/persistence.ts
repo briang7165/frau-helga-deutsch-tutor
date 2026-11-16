@@ -117,6 +117,13 @@ function readAttempt(raw: unknown, legacy: boolean): Attempt {
   )
     throw Error("Inconsistent grade");
   const allowed = [
+    "destination_mention",
+    "response_language",
+    "task_mismatch",
+    "fact_train",
+    "fact_brother",
+    "time_meaning",
+    "walk_meaning",
     "meaning",
     "capitalization",
     "spelling",

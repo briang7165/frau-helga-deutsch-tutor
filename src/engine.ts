@@ -2,8 +2,20 @@ import { activities, skills, type Activity, type Skill } from "./content";
 export { activities, skills, type Activity, type Skill } from "./content";
 export type Status =
   "correct" | "partial" | "incorrect" | "needs_review" | "skipped";
-export type Criterion = "meaning" | "verb" | "order" | "form" | "legacy";
+export type Criterion =
+  | "meaning"
+  | "verb"
+  | "order"
+  | "form"
+  | "legacy"
+  | "destination"
+  | "language"
+  | "task";
 export const messages: Record<Criterion, string> = {
+  destination: "Identify Nora's destination (60 points).",
+  language:
+    "Answer in German; the place name alone is language-neutral (25 points).",
+  task: "Give a short destination answer rather than translate the passage (15 points).",
   meaning: "Communicate the requested meaning.",
   verb: "Use the correct core verb and tense.",
   order: "Place the conjugated verb second in a statement.",
@@ -116,6 +128,7 @@ function distance(a: string, b: string): number {
 export function grade(a: Activity, answer: string, assisted = false): Attempt {
   const n = normalize(answer);
   const c = clean(answer);
+  if (a.id === "r1") return gradeDestination(a, n, assisted);
   if (a.skill === "writing" && /\b(freun|fruend|parkk)\b/iu.test(c)) {
     const corrected = c
       .replace(/\bfreun\b/giu, "Freund")
@@ -261,6 +274,138 @@ export function grade(a: Activity, answer: string, assisted = false): Attempt {
     );
   return unscored(a, "needs_review", assisted);
 }
+function gradeDestination(a: Activity, n: string, assisted: boolean): Attempt {
+  const rubric = a.rubric!;
+  const scored = (
+    meaning: boolean,
+    german: boolean,
+    short: boolean,
+    tags: string[] = [],
+  ) =>
+    result(
+      a,
+      [
+        part(
+          "destination",
+          meaning ? rubric.destination : 0,
+          rubric.destination,
+        ),
+        part("language", german ? rubric.language : 0, rubric.language),
+        part("task", short ? rubric.task : 0, rubric.task),
+      ],
+      tags,
+      assisted,
+    );
+  if (
+    /^(?:nach )?bonn$|^(?:sie|nora) fährt (?:am samstag )?nach bonn$/u.test(n)
+  )
+    return scored(true, true, true);
+  if (n === "nach bon")
+    return result(
+      a,
+      [
+        part("destination", 60, 60),
+        part("language", 20, 25),
+        part("task", 15, 15),
+      ],
+      ["spelling"],
+      assisted,
+    );
+  // Match complete bounded clauses. Mentioning Bonn alone inside an unknown
+  // sentence is never evidence of a positive destination assertion.
+  if (/^(?:to bonn|(?:nora|she) (?:goes|travels) to bonn)$/u.test(n))
+    return scored(true, false, true, ["response_language"]);
+  if (
+    /^(?:(?:nicht|not) (?:nach |to )?bonn|(?:nora|she) does not (?:go|travel) to bonn|(?:nora|sie) fährt nicht nach bonn)$/u.test(
+      n,
+    )
+  )
+    return scored(false, /^(nicht|nora fährt|sie fährt)/u.test(n), true, [
+      "meaning",
+    ]);
+  if (
+    /^(?:nach |to )?(?:berlin|köln|cologne|trier|hamburg)$|^(?:nora|sie) fährt nach (?:berlin|köln|trier|hamburg)$/u.test(
+      n,
+    )
+  )
+    return scored(false, !/^(to |cologne)/u.test(n), true, ["meaning"]);
+  const clauses = n.split(/\.\s*/u);
+  if (
+    /^(?:on saturday )?(?:nora|she) (?:goes|travels) (?:by train )?to bonn$/u.test(
+      clauses[0],
+    ) &&
+    clauses.length > 1 &&
+    clauses
+      .slice(1)
+      .every((clause) =>
+        /^(?:she visits her brother|(?:in the afternoon|at night) (?:she goes to the rhein space|they go for a walk by the rhine))$/u.test(
+          clause,
+        ),
+      )
+  ) {
+    return scored(true, false, false, [
+      "response_language",
+      "task_mismatch",
+      ...(clauses[0].includes("by train") ? ["fact_train"] : []),
+      ...(clauses.includes("she visits her brother") ? ["fact_brother"] : []),
+      ...(clauses.some((c) => c.startsWith("at night"))
+        ? ["time_meaning"]
+        : []),
+      ...(clauses.some((c) => c.endsWith("rhein space"))
+        ? ["walk_meaning"]
+        : []),
+    ]);
+  }
+  const unknown = unscored(a, "needs_review", assisted);
+  if (/\bbonn\b/u.test(n)) unknown.error_tags = ["destination_mention"];
+  return unknown;
+}
+export function teachingFeedback(
+  a: Activity,
+  attempt: Attempt,
+  attempts: Attempt[] = [attempt],
+) {
+  const tags = attempt.error_tags;
+  const destination = attempt.rubric_parts.find(
+    (p) => p.criterion === "destination",
+  );
+  const right =
+    attempt.status === "needs_review"
+      ? `${tags.includes("destination_mention") ? "I can see that you mention Bonn, but " : ""}I cannot confidently grade the entire sentence offline; this attempt is unscored.`
+      : a.id === "r1"
+        ? `${destination?.awarded ? "You identified Bonn as the destination." : "The destination is not correct."}${tags.includes("fact_train") ? " Train is also correct." : ""}${tags.includes("fact_brother") ? " Brother is also correct." : ""}`
+        : attempt.status === "correct"
+          ? "Sehr gut. You communicated the requested meaning."
+          : attempt.score
+            ? `Credit earned: ${attempt.rubric_parts
+                .filter((p) => p.awarded > 0)
+                .map((p) => `${p.criterion} ${p.awarded}/${p.possible}`)
+                .join("; ")}.`
+            : "This answer does not demonstrate the requested meaning yet.";
+  const correction =
+    [
+      tags.includes("response_language") ? "Answer in German." : "",
+      tags.includes("task_mismatch")
+        ? "Give the destination, not a paragraph translation; extra facts earn no task points."
+        : "",
+      tags.includes("time_meaning")
+        ? "Am Nachmittag means afternoon, not at night."
+        : "",
+      tags.includes("walk_meaning")
+        ? "Gehen sie am Rhein spazieren means they go for a walk by the Rhine, not ‘Rhein Space’."
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ") ||
+    (attempt.status === "correct"
+      ? "Keep this pattern."
+      : remediation(a, attempts));
+  return {
+    right,
+    correction,
+    next: `Model: ${a.model} Continue, or try again for practice. Your first attempt stays fixed.`,
+  };
+}
 export function remediation(a: Activity, attempts: Attempt[]): string {
   const errors = attempts.filter(
     (t) =>
@@ -304,6 +449,8 @@ export function assessmentActivities(variant = 0): Activity[] {
     {
       ...activities[1],
       id: prefix + "r",
+      rubric: undefined,
+      referenceFacts: [town, "Monday", "friend"],
       title: "A new journey",
       text: `${people[v]} fährt am Montag nach ${town}. Dort wartet eine Freundin.`,
       prompt: `Wohin fährt ${people[v]}?`,

@@ -84,7 +84,7 @@ export function VoiceControls({
           )
         }
       >
-        {preview ? "Preview German voice" : "Listen in German"}
+        {preview ? "Test voice" : "Listen in German"}
       </button>
       <button type="button" onClick={() => speech.stop()}>
         Stop voice
@@ -324,6 +324,10 @@ export function MicrophoneControls() {
   }
   return (
     <div className="microphone">
+      <p>
+        Recorded locally—NOT transcribed or graded. Type your transcript
+        separately.
+      </p>
       <p>
         <strong>Microphone diagnostic</strong> · {clock(duration)} ·{" "}
         {active ? "Recording" : asking ? "Asking permission" : "Stopped"}

@@ -2,6 +2,8 @@
 
 A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestone 1 is approved and merged. **Milestone 1.1 is implemented on `feature/m1-1-learning-ux` and awaits pull-request review.** No deployment or live services.
 
+The post-test classroom pass adds a compact layout with a collapsible navigation rail and teacher desk, concise English directions, intent-aware reading feedback, and a focused Check → Continue / Try again flow. Drafts survive Settings and pause in memory; first-attempt grades stay fixed. The audio setup check separates effects, installed voices, local recording and unavailable speech recognition. See the [updated acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for 61 unit tests, 27 Firefox tests, viewport evidence and manual audio limitations. PR #5 remains separate and unchanged.
+
 ## Run locally on Windows
 
 Use Node.js 22.12+ and npm. From your repository folder:

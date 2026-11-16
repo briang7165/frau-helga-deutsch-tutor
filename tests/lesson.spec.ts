@@ -8,7 +8,7 @@ async function answer(page: Page, value: string, last = false) {
   await page.getByRole("button", { name: "Check answer", exact: true }).click();
   await page
     .getByRole("button", {
-      name: last ? "Finish lesson" : "Next activity",
+      name: last ? "Finish lesson" : "Continue",
       exact: true,
     })
     .click();
@@ -79,14 +79,21 @@ test("microphone denial and missing voices leave manual speaking usable", async 
   });
   await start(page);
   for (let i = 0; i < 4; i++)
-    await page.getByRole("button", { name: "Skip activity" }).click();
+    await page.getByRole("button", { name: "Skip for now" }).click();
   await page.getByRole("button", { name: "Hold to talk" }).focus();
   await page.keyboard.down("Space");
   await expect(
     page.getByText(/Microphone access denied or unavailable/),
   ).toBeVisible();
   await page.keyboard.up("Space");
-  await expect(page.getByText(/No German voice found/)).toBeVisible();
+  await expect(
+    page.getByText(
+      "Recorded locally—NOT transcribed or graded. Type your transcript separately.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.locator(".voice-controls").getByText(/No German voice found/),
+  ).toBeVisible();
   await answer(page, "Ich fahre am Samstag mit dem Zug.");
   await answer(page, "Ich besuche meine Familie.", true);
   await expect(page.getByText("100% overall", { exact: true })).toBeVisible();
@@ -171,7 +178,7 @@ test("recording releases microphone tracks on pause and after a cancelled permis
   });
   await start(page);
   for (let i = 0; i < 4; i++)
-    await page.getByRole("button", { name: "Skip activity" }).click();
+    await page.getByRole("button", { name: "Skip for now" }).click();
   await page.getByRole("button", { name: "Hold to talk" }).focus();
   await page.keyboard.down("Space");
   await expect(

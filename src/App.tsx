@@ -5,7 +5,7 @@ import {
   breakdown,
   clock,
   emptyState,
-  remediation,
+  teachingFeedback,
   rewards,
   score,
   sessionActivities,
@@ -24,8 +24,9 @@ import {
 import { MicrophoneControls, VoiceControls } from "./SpeechControls";
 import { useSettings } from "./preferences";
 import { SettingsPanel } from "./SettingsPanel";
-import { WordHelp, instructions } from "./WordHelp";
+import { WordHelp, instructions, shortInstructions } from "./WordHelp";
 import { sounds } from "./sounds";
+import { AudioSetup } from "./AudioSetup";
 const percent = (n: number | null) => (n === null ? "Not graded" : `${n}%`);
 export default function App() {
   const [state, setState] = useState<State>(() => storage.load());
@@ -40,6 +41,11 @@ export default function App() {
   const [review, setReview] = useState<Session | null>(null);
   const [rewardNotice, setRewardNotice] = useState("");
   const { settings, update } = useSettings();
+  const [retrying, setRetrying] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(false);
+  const feedbackStarted = useRef<number | null>(null);
+  const [nextTimes, setNextTimes] = useState<number[]>([]);
+  const continueButton = useRef<HTMLButtonElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -50,7 +56,20 @@ export default function App() {
     current?.attempts.filter((t) => t.activityId === activity.id) ?? [];
   const latest = attempts.at(-1);
   const completed = current?.completedAt;
+  const activeClassroom = view === "classroom" && !!current && !completed;
+  const feedback = latest ? teachingFeedback(activity, latest, attempts) : null;
+  useEffect(() => {
+    if (latest) continueButton.current?.focus({ preventScroll: true });
+  }, [latest]);
   const earned = rewards(state.history);
+  const totalActivities = state.history.reduce(
+    (n, s) => n + sessionActivities(s).length,
+    0,
+  );
+  const skippedActivities = state.history.reduce(
+    (n, s) => n + breakdown(s).skipped,
+    0,
+  );
   const reportSession =
     review ?? (view === "classroom" && completed ? current : null);
   useEffect(() => {
@@ -79,6 +98,7 @@ export default function App() {
     const timer = setInterval(tick, 1000);
     const hide = () => {
       if (document.hidden) {
+        feedbackStarted.current = null;
         tick();
         setRunning(false);
         browserSpeechProvider.stop();
@@ -109,6 +129,7 @@ export default function App() {
   }, [running]);
   useEffect(() => {
     setAnswer("");
+    setRetrying(false);
     setAssisted(false);
     setLanguage(activity.skill === "vocabulary" ? "en" : "de-DE");
     if (!completed) setRewardNotice("");
@@ -144,6 +165,7 @@ export default function App() {
     setRunning(true);
   }
   function pause() {
+    feedbackStarted.current = null;
     setRunning(false);
     browserSpeechProvider.stop();
     sounds.stop();
@@ -157,6 +179,8 @@ export default function App() {
     e.preventDefault();
     if (!answer.trim() || !current || !running) return;
     const result = lessons.evaluate(activity, answer, assisted);
+    feedbackStarted.current = performance.now();
+    setRetrying(false);
     setState((s) =>
       s.current
         ? {
@@ -176,6 +200,13 @@ export default function App() {
   }
   function next() {
     if (!current) return;
+    if (latest && feedbackStarted.current !== null) {
+      const seconds = Math.round(
+        (performance.now() - feedbackStarted.current) / 1000,
+      );
+      setNextTimes((times) => [...times.slice(-99), seconds]);
+    }
+    feedbackStarted.current = null;
     const updated = {
       ...current,
       attempts: latest
@@ -225,11 +256,26 @@ export default function App() {
       settings.assessmentLessons,
     );
   return (
-    <>
+    <div
+      className={`${activeClassroom ? "in-lesson" : "dashboard"} ${settings.compact ? "compact" : "comfortable"} ${settings.sidebarCollapsed ? "nav-collapsed" : "nav-expanded"}`}
+    >
       <a className="skip-link" href="#main">
         Skip to classroom
       </a>
       <header className="topbar">
+        <button
+          aria-label={
+            settings.sidebarCollapsed
+              ? "Expand navigation"
+              : "Collapse navigation"
+          }
+          aria-expanded={!settings.sidebarCollapsed}
+          onClick={() =>
+            update({ sidebarCollapsed: !settings.sidebarCollapsed })
+          }
+        >
+          ☰
+        </button>
         <a href="#main" className="brand">
           <span className="monogram">FH</span>
           <span>
@@ -255,9 +301,13 @@ export default function App() {
             />
           </label>
           <small>
-            {settings.sfx
-              ? "Effects enabled"
-              : "Effects off — enable in Settings"}
+            {settings.sfx ? (
+              "Effects enabled"
+            ) : (
+              <button onClick={() => update({ sfx: true, muted: false })}>
+                Enable gentle sounds
+              </button>
+            )}
           </small>
         </div>
       </header>
@@ -268,10 +318,24 @@ export default function App() {
             {(["classroom", "progress", "settings"] as const).map((item, i) => (
               <button
                 key={item}
+                aria-label={
+                  item === "classroom"
+                    ? "Classroom"
+                    : item === "progress"
+                      ? "My progress"
+                      : "Settings"
+                }
+                title={
+                  item === "classroom"
+                    ? "Classroom"
+                    : item === "progress"
+                      ? "My progress"
+                      : "Settings"
+                }
                 aria-current={view === item ? "page" : undefined}
                 onClick={() => navigate(item)}
               >
-                0{i + 1}{" "}
+                <b aria-hidden="true">{["▤", "★", "⚙"][i]}</b>{" "}
                 <span>
                   {item === "classroom"
                     ? "Classroom"
@@ -308,23 +372,25 @@ export default function App() {
                 "This session works, but changes may not survive reload."}
             </p>
           )}
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">LOCAL & FREE · NO LIVE AI</p>
-              <h1>
-                {view === "settings"
-                  ? "Make yourself comfortable."
-                  : view === "progress"
-                    ? "Your learning notebook"
-                    : reportSession
-                      ? "Gut gemacht. Let’s review."
-                      : "Guten Tag. Nehmen Sie Platz."}
-              </h1>
+          {!activeClassroom && (
+            <div className="page-heading">
+              <div>
+                <p className="eyebrow">LOCAL & FREE · NO LIVE AI</p>
+                <h1>
+                  {view === "settings"
+                    ? "Make yourself comfortable."
+                    : view === "progress"
+                      ? "Your learning notebook"
+                      : reportSession
+                        ? "Gut gemacht. Let’s review."
+                        : "Guten Tag. Nehmen Sie Platz."}
+                </h1>
+              </div>
+              <span className="level">
+                A2<small>self-assessed</small>
+              </span>
             </div>
-            <span className="level">
-              A2<small>self-assessed</small>
-            </span>
-          </div>
+          )}
           {view === "settings" ? (
             <SettingsPanel
               state={state}
@@ -337,58 +403,64 @@ export default function App() {
             />
           ) : (
             <>
-              <p className="intro">
-                A firm hand, a little humor, and one useful sentence at a time.
-              </p>
-              <div className="stats">
-                <div>
-                  <span>COMPLETED SESSIONS</span>
-                  <strong>{state.history.length}</strong>
-                  <p>Actual local practice & checks</p>
-                </div>
-                <div>
-                  <span>GOLDSTERNE · EFFORT REWARDS</span>
-                  <strong>
-                    {earned.stars} ★ <small>{earned.xp} XP</small>
-                  </strong>
-                  <p>Separate from proficiency scores</p>
-                </div>
-                <div>
-                  <span>CURRENT STREAK</span>
-                  <strong>
-                    {streak(state.history)} <small>days</small>
-                  </strong>
-                  <p>A2 self-assessed · not certified</p>
-                </div>
-              </div>
-              <div className="weekly">
-                <span>
-                  Weekly challenge: {Math.min(earned.weekly, 3)}/3 sessions
-                </span>
-                <progress
-                  max={3}
-                  value={Math.min(earned.weekly, 3)}
-                  aria-label="Weekly challenge progress"
-                />
-                <small>
-                  Earn stars through practice, never by changing grades.
-                </small>
-              </div>
-              {due && (
-                <div className="notice" role="status">
-                  Your optional progress check is ready:{" "}
-                  {settings.assessmentDays} days or {settings.assessmentLessons}{" "}
-                  lessons, whichever comes first.{" "}
-                  {current && !completed ? (
-                    "Finish your current lesson first."
-                  ) : (
-                    <button onClick={() => start("assessment")}>
-                      Start progress check
-                    </button>
+              {!activeClassroom && (
+                <>
+                  <p className="intro">
+                    A firm hand, a little humor, and one useful sentence at a
+                    time.
+                  </p>
+                  <div className="stats">
+                    <div>
+                      <span>COMPLETED SESSIONS</span>
+                      <strong>{state.history.length}</strong>
+                      <p>Actual local practice & checks</p>
+                    </div>
+                    <div>
+                      <span>GOLDSTERNE · EFFORT REWARDS</span>
+                      <strong>
+                        {earned.stars} ★ <small>{earned.xp} XP</small>
+                      </strong>
+                      <p>Separate from proficiency scores</p>
+                    </div>
+                    <div>
+                      <span>CURRENT STREAK</span>
+                      <strong>
+                        {streak(state.history)} <small>days</small>
+                      </strong>
+                      <p>A2 self-assessed · not certified</p>
+                    </div>
+                  </div>
+                  <div className="weekly">
+                    <span>
+                      Weekly challenge: {Math.min(earned.weekly, 3)}/3 sessions
+                    </span>
+                    <progress
+                      max={3}
+                      value={Math.min(earned.weekly, 3)}
+                      aria-label="Weekly challenge progress"
+                    />
+                    <small>
+                      Earn stars through practice, never by changing grades.
+                    </small>
+                  </div>
+                  {due && (
+                    <div className="notice" role="status">
+                      Your optional progress check is ready:{" "}
+                      {settings.assessmentDays} days or{" "}
+                      {settings.assessmentLessons} lessons, whichever comes
+                      first.{" "}
+                      {current && !completed ? (
+                        "Finish your current lesson first."
+                      ) : (
+                        <button onClick={() => start("assessment")}>
+                          Start progress check
+                        </button>
+                      )}
+                    </div>
                   )}
-                </div>
+                </>
               )}
-              {rewardNotice && (
+              {rewardNotice && !activeClassroom && (
                 <p className="celebration" role="status">
                   <span aria-hidden="true">✦</span> {rewardNotice}
                 </p>
@@ -402,6 +474,26 @@ export default function App() {
               ) : view === "progress" ? (
                 <section className="card">
                   <h2>Recent lessons & progress checks</h2>
+                  <details>
+                    <summary>Local practice flow</summary>
+                    <p>
+                      {state.history.length} completed sessions.{" "}
+                      {skippedActivities}/{totalActivities} activities skipped (
+                      {totalActivities
+                        ? Math.round(
+                            (skippedActivities / totalActivities) * 100,
+                          )
+                        : 0}
+                      %).
+                    </p>
+                    <p>
+                      {nextTimes.length
+                        ? `${Math.round(nextTimes.reduce((a, b) => a + b, 0) / nextTimes.length)} seconds average feedback-to-Continue this visit (${nextTimes.length} steps).`
+                        : "No feedback-to-Continue timings this visit yet."}{" "}
+                      Paused intervals are excluded; timings stay in memory,
+                      without answers or uploads.
+                    </p>
+                  </details>
                   <p>{trend(state.history)}</p>
                   <p>
                     A2 self-assessed — progress check, not a certified CEFR
@@ -464,6 +556,10 @@ export default function App() {
                       English instructions guide every step. Today we’ll
                       practice the dative and plan a weekend.
                     </p>
+                    <p>
+                      6 activities · approx 30 min · no real speech grading yet
+                    </p>
+                    <AudioSetup onSettings={() => navigate("settings")} />
                     <div className="tags">
                       <span>{settings.targetMinutes}-minute target</span>
                       <span>6 activities</span>
@@ -499,6 +595,9 @@ export default function App() {
               ) : (
                 <section className="classroom">
                   <div className="lesson-top">
+                    <span className="step-count">
+                      {current.index + 1}/{list.length} · {activity.skill}
+                    </span>
                     <div>
                       <p className="eyebrow">
                         {current.mode === "assessment"
@@ -522,6 +621,25 @@ export default function App() {
                         {running ? "Pause lesson" : "Resume lesson"}
                       </button>
                     </div>
+                  </div>
+                  <div className="classroom-tools">
+                    <button
+                      onClick={() => update({ compact: !settings.compact })}
+                    >
+                      {settings.compact
+                        ? "Comfortable layout"
+                        : "Compact layout"}
+                    </button>
+                    <button
+                      aria-expanded={coachOpen}
+                      onClick={() => setCoachOpen(!coachOpen)}
+                    >
+                      Frau Helga’s desk
+                    </button>
+                    <button onClick={() => navigate("settings")}>
+                      Voice & Settings
+                    </button>
+                    <AudioSetup onSettings={() => navigate("settings")} />
                   </div>
                   <ol className="steps" aria-label="Lesson activities">
                     {list.map((a, i) => (
@@ -556,129 +674,150 @@ export default function App() {
                         key={`${current.id}-${activity.id}`}
                       >
                         <p className="eyebrow">{activity.skill}</p>
-                        <div className="instructions" lang="en">
-                          <strong>INSTRUCTIONS (ENGLISH)</strong>
-                          <p>{instructions(activity)}</p>
-                          <small>
-                            Your first attempt counts. Plausible unmatched
-                            answers are “Needs review — unscored”; skips are
-                            missing work. Neither lowers assessed averages.
-                          </small>
-                        </div>
-                        <h3 data-german>{activity.prompt}</h3>
-                        <WordHelp
-                          activity={activity}
-                          onHelp={() => setAssisted(true)}
-                        />
-                        {activity.text && (
-                          <>
-                            {activity.skill !== "reading" && (
-                              <VoiceControls text={activity.text} />
-                            )}{" "}
-                            {activity.skill === "listening" ? (
-                              <details
-                                onToggle={(e) => {
-                                  if (e.currentTarget.open) setAssisted(true);
-                                }}
-                              >
-                                <summary>
-                                  Show listening text / text-only fallback
-                                </summary>
+                        <details
+                          className="task-material"
+                          open={!latest || retrying}
+                        >
+                          <summary hidden={!latest || retrying}>
+                            Review question & passage — {activity.prompt}
+                          </summary>
+                          <div className="instructions" lang="en">
+                            <strong>INSTRUCTIONS (ENGLISH)</strong>
+                            <p>{shortInstructions(activity)}</p>
+                            <details>
+                              <summary>More instructions</summary>
+                              <p>
+                                {activity.id === "r1"
+                                  ? "Destination 60 points, German response 25, short answer to the question 15. A city name alone is valid. Extra translated facts earn no extra points."
+                                  : instructions(activity)}
+                              </p>
+                              <small>
+                                Your first attempt counts. Plausible unmatched
+                                answers are “Needs review — unscored”; skips are
+                                missing work. Neither lowers assessed averages.
+                                Ctrl+Enter checks your answer.
+                              </small>
+                            </details>
+                          </div>
+                          <h3 data-german>{activity.prompt}</h3>
+                          <WordHelp
+                            activity={activity}
+                            onHelp={() => setAssisted(true)}
+                          />
+                          {activity.text && (
+                            <>
+                              {activity.skill !== "reading" && (
+                                <VoiceControls text={activity.text} />
+                              )}{" "}
+                              {activity.skill === "listening" ? (
+                                <details
+                                  onToggle={(e) => {
+                                    if (e.currentTarget.open) setAssisted(true);
+                                  }}
+                                >
+                                  <summary>
+                                    Show listening text / text-only fallback
+                                  </summary>
+                                  <blockquote lang="de" data-german>
+                                    {activity.text}
+                                  </blockquote>
+                                </details>
+                              ) : (
                                 <blockquote lang="de" data-german>
                                   {activity.text}
                                 </blockquote>
-                              </details>
-                            ) : (
-                              <blockquote lang="de" data-german>
-                                {activity.text}
-                              </blockquote>
-                            )}
-                          </>
-                        )}
-                        {activity.skill === "speaking" && (
-                          <MicrophoneControls />
-                        )}
-                        <form onSubmit={submit}>
-                          {activity.choices && (
-                            <div
-                              className="choices"
-                              role="group"
-                              aria-label="Suggested answers"
-                            >
-                              {activity.choices.map((c) => (
-                                <button
-                                  type="button"
-                                  key={c}
-                                  aria-pressed={answer === c}
-                                  onClick={() => {
-                                    setAnswer(c);
-                                    if (activity.skill === "speaking")
-                                      setAssisted(true);
-                                  }}
+                              )}
+                            </>
+                          )}
+                          {activity.skill === "speaking" &&
+                            (!latest || retrying) && <MicrophoneControls />}
+                        </details>
+                        <form
+                          id="answer-form"
+                          onSubmit={submit}
+                          onKeyDown={(e) => {
+                            if (e.ctrlKey && e.key === "Enter") {
+                              e.preventDefault();
+                              if (!latest || retrying)
+                                e.currentTarget.requestSubmit();
+                            }
+                          }}
+                        >
+                          {(!latest || retrying) && (
+                            <>
+                              {activity.choices && (
+                                <div
+                                  className="choices"
+                                  role="group"
+                                  aria-label="Suggested answers"
                                 >
-                                  {c}
-                                </button>
-                              ))}
-                            </div>
+                                  {activity.choices.map((c) => (
+                                    <button
+                                      type="button"
+                                      key={c}
+                                      aria-pressed={answer === c}
+                                      onClick={() => {
+                                        setAnswer(c);
+                                        if (activity.skill === "speaking")
+                                          setAssisted(true);
+                                      }}
+                                    >
+                                      {c}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              {activity.skill === "listening" && (
+                                <label>
+                                  Answer language
+                                  <select
+                                    value={language}
+                                    onChange={(e) =>
+                                      setLanguage(e.target.value)
+                                    }
+                                  >
+                                    <option value="de-DE">German</option>
+                                    <option value="en">English</option>
+                                  </select>
+                                </label>
+                              )}
+                              <label htmlFor="answer">
+                                {activity.skill === "speaking"
+                                  ? "Manual transcript"
+                                  : "Your answer"}
+                              </label>
+                              <textarea
+                                id="answer"
+                                lang={language}
+                                spellCheck={
+                                  language === "de-DE"
+                                    ? settings.germanSpellcheck
+                                    : settings.englishSpellcheck
+                                }
+                                value={answer}
+                                onChange={(e) => setAnswer(e.target.value)}
+                                maxLength={500}
+                                rows={
+                                  activity.skill === "writing" ||
+                                  answer.length > 100
+                                    ? 3
+                                    : 1
+                                }
+                                placeholder={
+                                  language === "de-DE"
+                                    ? "Write in German…"
+                                    : "Write in English…"
+                                }
+                              />
+                              <p className="input-help">
+                                Free text stays in memory. No automatic
+                                transcription.{" "}
+                                {assisted
+                                  ? "Help used — marked assisted, with no score penalty."
+                                  : ""}
+                              </p>
+                            </>
                           )}
-                          {activity.skill === "listening" && (
-                            <label>
-                              Answer language
-                              <select
-                                value={language}
-                                onChange={(e) => setLanguage(e.target.value)}
-                              >
-                                <option value="de-DE">German</option>
-                                <option value="en">English</option>
-                              </select>
-                            </label>
-                          )}
-                          <label htmlFor="answer">
-                            {activity.skill === "speaking"
-                              ? "Manual transcript"
-                              : "Your answer"}
-                          </label>
-                          <textarea
-                            id="answer"
-                            lang={language}
-                            spellCheck={
-                              language === "de-DE"
-                                ? settings.germanSpellcheck
-                                : settings.englishSpellcheck
-                            }
-                            value={answer}
-                            onChange={(e) => setAnswer(e.target.value)}
-                            maxLength={500}
-                            rows={3}
-                            placeholder={
-                              language === "de-DE"
-                                ? "Write in German…"
-                                : "Write in English…"
-                            }
-                          />
-                          <p className="input-help">
-                            Free text stays in memory. No automatic
-                            transcription.{" "}
-                            {assisted
-                              ? "Help used — marked assisted, with no score penalty."
-                              : ""}
-                          </p>
-                          <div className="actions">
-                            <button
-                              className="primary"
-                              disabled={!answer.trim()}
-                              type="submit"
-                            >
-                              {latest ? "Check again" : "Check answer"}
-                            </button>
-                            <button type="button" onClick={next}>
-                              {latest
-                                ? current.index === list.length - 1
-                                  ? "Finish lesson"
-                                  : "Next activity"
-                                : "Skip activity"}
-                            </button>
-                          </div>
                         </form>
                         {latest && (
                           <div
@@ -686,6 +825,11 @@ export default function App() {
                             role="status"
                           >
                             <strong>
+                              {latest.status === "correct" && (
+                                <span className="celebration">
+                                  <span aria-hidden="true">✦ </span>
+                                </span>
+                              )}
                               {latest.status === "correct"
                                 ? "Sehr gut. Das stimmt."
                                 : latest.status === "partial"
@@ -695,16 +839,19 @@ export default function App() {
                                     : "This answer does not match the requested meaning."}
                             </strong>
                             <p>
-                              {latest.status === "needs_review"
-                                ? "The local rules cannot confidently assess this wording. It is excluded from averages. Try a model pattern if you want practice feedback; the first attempt remains unscored."
-                                : `Rubric confidence: ${latest.confidence}. ${latest.assisted ? "Assisted answer; no score penalty." : ""}`}
+                              <b>What you got right:</b> {feedback!.right}
                             </p>
-                            {(latest.status === "incorrect" ||
-                              latest.status === "partial") && (
-                              <p>{remediation(activity, attempts)}</p>
-                            )}
-                            {settings.detail === "detailed" &&
-                              latest.rubric_parts.length > 0 && (
+                            <p>
+                              <b>Correction:</b> {feedback!.correction}
+                            </p>
+                            <p>
+                              <b>Next step:</b> {feedback!.next}
+                            </p>
+                            <details>
+                              <summary>
+                                Detailed rubric & first-attempt policy
+                              </summary>
+                              {latest.rubric_parts.length > 0 && (
                                 <ul>
                                   {latest.rubric_parts.map((p) => (
                                     <li key={p.criterion}>
@@ -714,14 +861,13 @@ export default function App() {
                                   ))}
                                 </ul>
                               )}
+                            </details>
                           </div>
                         )}
                         {latest && (
                           <details
                             className="section-review"
-                            open={
-                              (current.index + 1) % settings.reviewEvery === 0
-                            }
+
                             onToggle={(e) => {
                               if (e.currentTarget.open) setAssisted(true);
                             }}
@@ -735,27 +881,69 @@ export default function App() {
                             </p>
                           </details>
                         )}
-                      </article>
-                      <aside className="coach-card">
-                        <p className="eyebrow">FRAU HELGA’S DESK</p>
-                        <div className="avatar" aria-hidden="true">
-                          H.
+                        <div className="actions">
+                          {(!latest || retrying) && (
+                            <button
+                              className="primary"
+                              form="answer-form"
+                              disabled={!answer.trim()}
+                              type="submit"
+                            >
+                              {latest ? "Check again" : "Check answer"}
+                            </button>
+                          )}
+                          {latest && !retrying && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRetrying(true);
+                                requestAnimationFrame(() =>
+                                  document.getElementById("answer")?.focus(),
+                                );
+                              }}
+                            >
+                              Try again
+                            </button>
+                          )}
+                          <button
+                            className={latest ? "primary" : ""}
+                            ref={continueButton}
+                            type="button"
+                            onClick={next}
+                          >
+                            {latest
+                              ? current.index === list.length - 1
+                                ? "Finish lesson"
+                                : "Continue"
+                              : "Skip for now"}
+                          </button>
                         </div>
-                        <h3 lang="de">Schritt für Schritt.</h3>
-                        <p>
-                          Mistakes show us where to practice. One wrong article
-                          does not erase everything you know.
-                        </p>
-                        <hr />
-                        <p>
-                          Need a word? Select it in the German material, or open
-                          Help and type it.
-                        </p>
-                        <p className="muted">
-                          Text is graded with local rules. A2 is self-assessed,
-                          not certified. Audio is never graded.
-                        </p>
-                      </aside>
+                      </article>
+                      {coachOpen && (
+                        <aside className="coach-card">
+                          <p className="eyebrow">FRAU HELGA’S DESK</p>
+                          <div className="avatar" aria-hidden="true">
+                            H.
+                          </div>
+                          <h3 lang="de">Schritt für Schritt.</h3>
+                          <p>
+                            Mistakes show us where to practice. One wrong
+                            article does not erase everything you know.
+                          </p>
+                          <hr />
+                          <p>
+                            Need a word? Select it in the German material, or
+                            open Help and type it.
+                          </p>
+                          <p className="muted">
+                            Text is graded with local rules. A2 is
+                            self-assessed, not certified. Audio is never graded.
+                          </p>
+                          <button onClick={() => setCoachOpen(false)}>
+                            Close teacher desk
+                          </button>
+                        </aside>
+                      )}
                     </div>
                   )}
                 </section>
@@ -770,7 +958,7 @@ export default function App() {
           </footer>
         </main>
       </div>
-    </>
+    </div>
   );
 }
 function Report({

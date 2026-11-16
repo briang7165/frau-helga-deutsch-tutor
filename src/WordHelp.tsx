@@ -200,6 +200,22 @@ export function instructions(a: Activity) {
       "Speak in German and type what you said, or type without a microphone. No automatic transcription is enabled. Only the typed text is checked; pronunciation is not graded. Other plausible replies may need review.",
   }[a.skill];
 }
+export function shortInstructions(a: Activity) {
+  if (a.id === "r1")
+    return "Where does Nora travel? Answer in German with a place, not a translation of the paragraph.";
+  return {
+    vocabulary:
+      "Choose or type the English meaning. Your answer is checked for meaning.",
+    reading:
+      "Read the passage and answer the question in German. A short phrase is enough.",
+    writing:
+      "Translate into German. Meaning, verb, word order and case earn separate credit.",
+    listening:
+      "Listen, then answer in English or German. Text-only fallback is available.",
+    speaking:
+      "Speak in German, then type what you said. Only typed text is checked; audio is not graded.",
+  }[a.skill];
+}
 export function WordHelp({
   activity,
   onHelp,

@@ -7,6 +7,8 @@ import {
 } from "react";
 export type Settings = {
   version: 1;
+  compact: boolean;
+  sidebarCollapsed: boolean;
   sfx: boolean;
   muted: boolean;
   sfxVolume: number;
@@ -34,6 +36,8 @@ export type Settings = {
 export const settingsKey = "frau-helga-settings-v1";
 export const defaults: Settings = {
   version: 1,
+  compact: true,
+  sidebarCollapsed: true,
   sfx: false,
   muted: true,
   sfxVolume: 20,

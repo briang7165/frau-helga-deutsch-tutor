@@ -7,7 +7,7 @@ async function start(page: Page) {
 async function skip(page: Page, n: number) {
   for (let i = 0; i < n; i++)
     await page
-      .getByRole("button", { name: "Skip activity", exact: true })
+      .getByRole("button", { name: "Skip for now", exact: true })
       .click();
 }
 async function check(page: Page, text: string) {
@@ -128,20 +128,23 @@ test("wrong case earns partial credit; unknown first responses stay unscored thr
   await expect(
     page.getByText("You have demonstrated part of this: 90%."),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
   await page.getByRole("button", { name: "Check again" }).click();
-  await expect(page.getByText(/Two separate questions:/)).toBeVisible();
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await expect(page.locator(".feedback")).toContainText(
+    "Your first attempt stays fixed",
+  );
+  await expect(page.locator(".feedback")).toContainText(
+    "Two separate questions:",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await check(page, "Something plausible but not in the dictionary");
   await expect(
     page.getByText("Needs review — unscored", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
   await page.locator("#answer").fill("fresh bread");
   await page.getByRole("button", { name: "Check again" }).click();
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await skip(page, 2);
   await expect(page.getByText("90% overall", { exact: true })).toBeVisible();
   await expect(
@@ -182,9 +185,7 @@ test("mute and volume persist, reduced motion suppresses celebration, rewards do
     "animation-name",
     "none",
   );
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await skip(page, 5);
   await expect(page.getByText("100% overall", { exact: true })).toBeVisible();
   await expect(page.getByText("15 XP", { exact: true })).toBeVisible();
@@ -260,9 +261,7 @@ test("weekly reminder starts a separate rotating assessment and reports a trend"
   ).toBeVisible();
   await page.getByRole("button", { name: "Start progress check" }).click();
   await check(page, "train station");
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await skip(page, 4);
   await expect(page.getByText(/First progress check recorded/)).toBeVisible();
   await expect(
@@ -275,9 +274,7 @@ test("weekly reminder starts a separate rotating assessment and reports a trend"
   await page.getByRole("button", { name: "Take a progress check" }).click();
   await expect(page.getByRole("heading", { name: /Fahrkarte/ })).toBeVisible();
   await check(page, "a suitcase");
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await skip(page, 4);
   await expect(page.getByText(/Lower observed performance/)).toBeVisible();
   await expect(page.getByText("0% overall", { exact: true })).toBeVisible();
@@ -321,9 +318,7 @@ test("voice discovery includes local de-DE and remote de-AT, remote is blocked b
   await page
     .getByLabel("German voice", { exact: true })
     .selectOption("remote-at");
-  await expect(
-    page.getByRole("button", { name: "Preview German voice" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Test voice" })).toBeDisabled();
   await expect(
     page.getByLabel("Allow selected remote browser voices"),
   ).not.toBeChecked();
@@ -332,9 +327,7 @@ test("voice discovery includes local de-DE and remote de-AT, remote is blocked b
   await expect(page.getByLabel("German voice", { exact: true })).toHaveValue(
     "remote-at",
   );
-  await expect(
-    page.getByRole("button", { name: "Preview German voice" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Test voice" })).toBeDisabled();
 });
 test("recording produces a consent-gated replay clip and discards all resources", async ({
   page,
@@ -414,9 +407,7 @@ test("backup import validates, merges rather than erases, and exports no raw ans
 }) => {
   await start(page);
   await check(page, "a trip");
-  await page
-    .getByRole("button", { name: "Next activity", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await skip(page, 5);
   await settings(page);
   const download = page.waitForEvent("download");
@@ -426,13 +417,11 @@ test("backup import validates, merges rather than erases, and exports no raw ans
   const file = await download;
   const path = await file.path();
   expect(path).toBeTruthy();
-  await page
-    .getByLabel("Import local backup")
-    .setInputFiles({
-      name: "invalid.json",
-      mimeType: "application/json",
-      buffer: Buffer.from("{bad"),
-    });
+  await page.getByLabel("Import local backup").setInputFiles({
+    name: "invalid.json",
+    mimeType: "application/json",
+    buffer: Buffer.from("{bad"),
+  });
   await expect(page.getByText(/Import rejected:/)).toBeVisible();
   page.once("dialog", (d) => d.accept());
   await page.getByLabel("Import local backup").setInputFiles(path!);

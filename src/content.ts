@@ -18,6 +18,11 @@ export type Activity = {
   rule: string;
   alternative: string;
   minutes: number;
+  intent?: "destination";
+  expectedLanguage?: "German";
+  shortAnswerTarget?: string;
+  referenceFacts?: string[];
+  rubric?: { destination: number; language: number; task: number };
 };
 export const activities: Activity[] = [
   {
@@ -35,6 +40,17 @@ export const activities: Activity[] = [
   },
   {
     id: "r1",
+    intent: "destination",
+    expectedLanguage: "German",
+    shortAnswerTarget: "A place, not a translation of the paragraph",
+    referenceFacts: [
+      "Bonn",
+      "train",
+      "brother",
+      "afternoon",
+      "walk by the Rhine",
+    ],
+    rubric: { destination: 60, language: 25, task: 15 },
     skill: "reading",
     title: "Samstag am Fluss",
     text: "Am Samstag fährt Nora mit dem Zug nach Bonn. Sie besucht ihren Bruder. Am Nachmittag gehen sie am Rhein spazieren.",

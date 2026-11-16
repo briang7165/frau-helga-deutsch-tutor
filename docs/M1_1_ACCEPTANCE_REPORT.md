@@ -1,5 +1,67 @@
 # Milestone 1.1 — implementation and review
 
+## Post-test classroom corrective pass — November 15, 2026
+
+Implemented on the existing `feature/m1-1-learning-ux` branch for PR #3, following `M1_1_POST_TEST_QC.md`. This section supersedes the initial UI/validation notes below. PR #3 remains for review; no merge or deployment. PR #5 and its separate worktree/branch were not modified or reconciled.
+
+### Classroom and progression
+
+- The active lesson omits dashboard greeting/statistics/weekly blocks. A collapsed navigation rail, compact title/timer/progress, and optional teacher desk give the task nearly all available width. Compact/comfortable and sidebar choices persist through the existing Settings schema, with safe defaults for older records.
+- English directions are short; longer scoring/privacy guidance is in More instructions. The destination input starts at one line and expands for longer text; writing uses three lines. Relative font sizes respect the text-size preference. No global overflow clipping is used.
+- Check leads to a concise live-region panel: What you got right, Correction, Next step. The question/passage collapses into a review expander after grading and reopens for retry. The model is visible without finding Section review. Detailed rubric and the first-score policy remain expandable.
+- Continue receives focus without a forced scroll; Enter advances and focuses the next activity heading. Ctrl+Enter checks an answer. Try again restores the draft and preserves the original first-attempt score. The action rail is sticky on desktop, with ordinary reachable document flow on narrow screens.
+- Drafts survive help, layout changes, Settings and pause in memory only; reload intentionally discards raw text. Existing M1 records and progress migration remain untouched. Local practice flow shows completions/skip rate from saved outcomes and up to 100 feedback-to-Continue timings for this visit only; paused samples are excluded. No telemetry or answer content is uploaded.
+
+### Intent-aware reading feedback
+
+The r1 metadata now states destination intent, German response language, short answer target, reference facts and a transparent 60/25/15 rubric. The evaluator matches bounded complete forms/clauses, not a bag of words. It does not claim general semantic translation ability.
+
+| Response | Result |
+| --- | --- |
+| `Bonn`, `Nach Bonn.`, `Sie fährt nach Bonn` | 100: destination 60, language 25, task 15 |
+| `Nora goes to Bonn` / `to Bonn` | 75: destination 60, language 0, task 15 |
+| Reported long English paraphrase | 60: destination 60, language 0, task 0 |
+| `Nach Berlin` / known German negated Bonn answer | 40: destination 0, language 25, short response 15; never most points |
+| `not Bonn` / known English negation | 15: destination 0, language 0, short response 15 |
+| `Nach Bon.` | 95: recognized bounded spelling error; 5 language/form points deducted |
+| Uncertain or contradictory clauses beyond the templates | Needs review, unscored; mentioning Bonn alone earns no destination credit |
+| Skip | Unscored, excluded from assessed averages |
+
+For the reported paraphrase, feedback identifies destination/train/brother evidence, explains the response-language/task mismatch, corrects afternoon versus night and walking by the Rhine versus “Rhein Space,” and supplies `Nach Bonn.`. Extra facts earn no extra task points. Accurate bounded English translations also receive only 60, because translation was not the task. Unknown wording receives an actionable model without invented comprehension credit. Only validated rubric categories and outcome tags are persisted; historical scores are not recomputed.
+
+### Audio setup and limits
+
+The first-run introduction and classroom expose an Audio setup check separating effects, voice output, microphone input and speech recognition. Enable gentle sounds is an explicit gesture; Test speaker attempts to resume Web Audio and reports off/unavailable/suspended states. Volume/mute still persist. Settings has Test voice, discovered German locale/locality labels and installation tips. Missing voices never imply a custom voice exists. Beside the record controls, “Recorded locally—NOT transcribed or graded” is visible before recording; replay/discard remain consent-gated and ephemeral. Grading, pausing and navigating release recording resources.
+
+The future optional semantic evaluator/transcription/TTS boundary is documented in [M1_1_FUTURE_SPEECH_PLAN.md](M1_1_FUTURE_SPEECH_PLAN.md). This is design only; no external service, upload, paid upgrade, key or billing has been activated.
+
+### Final validation
+
+Windows / Firefox, November 15, 2026:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| `npm.cmd ci` | PASS | Locked dependencies installed; 0 vulnerabilities reported |
+| `npm.cmd run typecheck` | PASS | No TypeScript errors |
+| `npm.cmd test` | PASS | 61 unit cases: existing 37 plus 24 QC cases, including intent, negation, uncertain clauses, feedback, storage round-trip and layout defaults |
+| `npm.cmd run build` | PASS | Production Vite bundle generated |
+| `npm.cmd run test:firefox` | PASS | 27 cases: existing 19 updated for the new actions, plus 8 classroom acceptance cases; all 12 enhancement cases also passed a focused rerun after retaining alternate explanations for repeated errors |
+| `npm.cmd audit` | PASS | 0 vulnerabilities |
+| Desktop layout | PASS | 1100×650, 1280×720, 1366×768, 1920×1080; short reading task and reported-example feedback fit without document vertical scroll; Continue is within the viewport |
+| Mobile / reflow | PASS | 390×844 usable without horizontal overflow; 550×325 CSS viewport simulates 1100×650 at 200% zoom, with controls reachable |
+| Visual comparison | PASS | Before/after 1100 screenshots and after mobile feedback inspected; no feedback clipping at the normal target viewport |
+| Actual Firefox browser zoom at 200% | NOT RUN | Automated reflow viewport is an approximation, not a browser-zoom hardware check |
+| Physical microphone, audible speaker/voice quality, installed dictionary | NOT RUN | Browser tests use mock streams/voices or capability fallback; manual device acceptance still required |
+| Live AI, external TTS/transcription, Gmail, cloud deployment | NOT RUN | Intentionally out of scope |
+
+The initial QC test run caught long feedback overflowing at 1100×650 and 1280×720; collapsing the review material after grading fixed it. Existing browser assertions were adapted to Continue/Try again/Test voice and to the separate audio diagnostics panel. No unresolved automated failures remain.
+
+Screenshots are local review artifacts (not GitHub uploads): `outputs/qc-before-1100.png`, `outputs/qc-before-feedback-1100.png`, `outputs/qc-after-1100.png`, `outputs/qc-after-feedback-1100.png`. After screenshots also cover widths 1280, 1366, 1920 and 390 using the same filenames with the width substituted. They are generated from fictional lesson data; the after captures are reproducible via `tests/classroom-qc.spec.ts`. The `outputs` directory here is the parent task's deliverables directory, two levels above the checkout.
+
+Launch: from this checkout run `npm.cmd ci` if needed, then `npm.cmd run dev`; open `http://127.0.0.1:5173` in Firefox. Use the same host/port as your existing progress. Review the reading example, try a correction, open Settings and return, and test physical audio separately. Long expanded help, recording diagnostics, comfortable layout, mobile and enlarged text may require scrolling; content remains accessible.
+
+Changed implementation: `App.tsx`, `AudioSetup.tsx`, `WordHelp.tsx`, `content.ts`, `engine.ts`, `persistence.ts`, `preferences.tsx`, `SettingsPanel.tsx`, `SpeechPanel.tsx`, `sounds.ts`, `styles.css`; unit/browser regressions, README and this report. No changes to PR #5.
+
 Branch: `feature/m1-1-learning-ux`, based on approved M1 on `main`.
 This milestone remains a local React/TypeScript/Vite application. No Gemini, ElevenLabs, Gmail, Cloudflare, billing, deployment, OAuth, or real email integration was activated.
 

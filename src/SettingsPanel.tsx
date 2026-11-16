@@ -80,6 +80,29 @@ export function SettingsPanel({
       <p>Changes apply immediately and stay on this device.</p>
       {settingsWarning && <p role="alert">{settingsWarning}</p>}
       <fieldset>
+        <legend>Classroom layout</legend>
+        <label>
+          <input
+            type="checkbox"
+            checked={s.compact}
+            onChange={(e) => update({ compact: e.target.checked })}
+          />
+          Compact classroom
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={s.sidebarCollapsed}
+            onChange={(e) => update({ sidebarCollapsed: e.target.checked })}
+          />
+          Collapse sidebar
+        </label>
+        <p>
+          Ctrl+Enter checks an answer. After feedback, focus moves to Continue;
+          Enter advances. Drafts survive Settings and pause in memory only.
+        </p>
+      </fieldset>
+      <fieldset>
         <legend>Sound</legend>
         <label>
           <input

@@ -1141,3 +1141,278 @@ main {
     gap: 5px;
   }
 }
+/* Compact classroom: content grows normally at zoom/mobile; no global clipping. */
+.topbar {
+  gap: 12px;
+}
+.nav-collapsed .layout {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+.nav-collapsed .sidebar {
+  padding: 16px 6px;
+}
+.nav-collapsed .sidebar nav button {
+  text-align: center;
+}
+.nav-collapsed .sidebar nav button span,
+.nav-collapsed .sidebar > .eyebrow,
+.nav-collapsed .teacher-note,
+.nav-collapsed .sidebar-footer {
+  display: none;
+}
+.in-lesson .topbar {
+  height: auto;
+  min-height: 56px;
+  padding: 6px 16px;
+}
+.in-lesson .brand {
+  font-size: 1.25rem;
+  gap: 8px;
+}
+.in-lesson .brand small {
+  display: none;
+}
+.in-lesson .monogram {
+  height: 34px;
+  width: 34px;
+  font-size: 0.875rem;
+}
+.in-lesson .global-sound {
+  gap: 8px;
+  font-size: 0.875rem;
+}
+.in-lesson .global-sound small {
+  font-size: 0.875rem;
+}
+.in-lesson .sidebar {
+  min-height: 0;
+}
+.in-lesson main {
+  padding: 12px 18px;
+}
+.in-lesson .privacy-footer {
+  display: none;
+}
+.in-lesson .lesson-top {
+  gap: 12px;
+}
+.in-lesson .lesson-top h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.in-lesson .lesson-top .eyebrow {
+  display: none;
+}
+.in-lesson .time {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.in-lesson .time strong {
+  font-size: 1.25rem;
+}
+.in-lesson .time span {
+  display: none;
+}
+.in-lesson .steps {
+  padding: 6px 0;
+  border: 0;
+}
+.in-lesson .steps li {
+  font-size: 0.875rem;
+}
+.classroom-tools {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.classroom-tools button,
+.in-lesson button {
+  font-size: 0.875rem;
+  padding: 6px 10px;
+}
+.audio-setup {
+  font-size: 0.875rem;
+}
+.audio-setup[open] {
+  padding: 10px;
+  background: #edf2e6;
+  border: 1px solid #a5b2a5;
+}
+.audio-setup p {
+  margin: 8px 0;
+}
+.classroom-tools .audio-setup {
+  margin-left: auto;
+}
+.in-lesson .activity-grid {
+  display: block;
+  position: relative;
+}
+.in-lesson .coach-card {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  top: 0;
+  width: min(320px, 100%);
+  max-height: 65vh;
+  overflow: auto;
+  box-shadow: 0 8px 28px #233c3333;
+}
+.in-lesson .coach-card .avatar {
+  display: none;
+}
+.in-lesson .exercise > .eyebrow {
+  display: none;
+}
+.compact.in-lesson .exercise {
+  padding: 12px 16px;
+}
+.compact.in-lesson .exercise h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  margin: 8px 0;
+}
+.compact.in-lesson .instructions {
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+.compact.in-lesson .instructions p {
+  margin: 2px 0;
+  font-size: 0.9375rem;
+}
+.compact.in-lesson details summary {
+  padding: 3px 0;
+  font-size: 0.875rem;
+}
+.compact.in-lesson .instructions strong {
+  font-size: 0.875rem;
+}
+.compact.in-lesson .exercise blockquote {
+  font:
+    1.0625rem/1.4 Georgia,
+    serif;
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+.compact.in-lesson .exercise label {
+  margin: 6px 0 3px;
+  font-size: 0.875rem;
+}
+.compact.in-lesson textarea {
+  min-height: 36px;
+  padding: 6px 8px;
+  font-size: 1rem;
+}
+.compact.in-lesson .choices {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.compact.in-lesson .word-help {
+  margin: 6px 0;
+}
+.compact.in-lesson .input-help {
+  margin: 3px 0 8px;
+  font-size: 0.875rem;
+}
+.compact.in-lesson .feedback {
+  margin: 8px 0;
+  padding: 8px 10px;
+  font-size: 0.9375rem;
+}
+.compact.in-lesson .feedback p {
+  margin: 4px 0;
+}
+.compact.in-lesson .section-review {
+  margin: 4px 0;
+}
+.in-lesson .exercise > .actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #fffdf8;
+  border-top: 1px solid #d7ddce;
+  padding: 8px 0 0;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+.in-lesson .feedback details[open] {
+  max-height: 180px;
+  overflow: auto;
+}
+.in-lesson .instructions details[open] {
+  max-height: 140px;
+  overflow: auto;
+}
+.in-lesson .feedback:focus {
+  outline: 2px solid #b0762c;
+}
+.in-lesson .feedback .celebration {
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+.compact.in-lesson .instructions {
+  margin-top: 0;
+}
+.in-lesson .steps li {
+  flex-direction: row;
+}
+.in-lesson .voice-controls,
+.in-lesson .microphone {
+  font-size: 0.875rem;
+}
+@media (max-width: 700px) {
+  .nav-collapsed .layout,
+  .nav-expanded .layout {
+    display: block;
+  }
+  .nav-collapsed .sidebar,
+  .nav-expanded .sidebar {
+    padding: 4px;
+    border: 0;
+    min-height: 0;
+  }
+  .sidebar nav {
+    display: flex;
+    justify-content: space-around;
+  }
+  .sidebar > .eyebrow,
+  .sidebar .teacher-note,
+  .sidebar .sidebar-footer {
+    display: none;
+  }
+  .nav-collapsed .sidebar nav button span {
+    display: inline;
+    margin-left: 4px;
+  }
+  .in-lesson .topbar {
+    flex-wrap: wrap;
+  }
+  .in-lesson .global-sound {
+    flex-wrap: wrap;
+  }
+  .in-lesson main {
+    padding: 8px;
+  }
+  .in-lesson .lesson-top {
+    flex-wrap: wrap;
+  }
+  .in-lesson .steps {
+    flex-wrap: wrap;
+  }
+  .classroom-tools .audio-setup {
+    margin-left: 0;
+  }
+  .in-lesson .exercise > .actions {
+    position: static;
+  }
+  .in-lesson .coach-card {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+}
