@@ -1,0 +1,76 @@
+name: Frau Helga CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frau-helga-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validation:
+    name: Typecheck, unit tests, build, Firefox and audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: "true"
+    steps:
+      - name: Check out public source
+        uses: actions/checkout@v4
+
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Check frontend types
+        run: npm run typecheck
+
+      - name: Check optional voice-server types
+        run: npm run voice:typecheck --if-present
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Check optional client voice secret boundaries
+        run: npm run test:voice-bundle --if-present
+
+      - name: Dependency security audit
+        run: npm audit --audit-level=high
+
+      - name: Install Firefox for Playwright
+        run: npx playwright install --with-deps firefox
+
+      - name: Prepare test screenshot output folder
+        run: mkdir -p ../../outputs
+
+      - name: Firefox browser tests
+        run: npm run test:firefox
+
+      - name: Upload browser failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-failures
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+# No secrets, external AI/TTS calls, billing, deployment, or public user data.
+# This workflow tests mock providers only.
