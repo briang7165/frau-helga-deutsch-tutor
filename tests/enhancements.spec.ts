@@ -279,7 +279,7 @@ test("weekly reminder starts a separate rotating assessment and reports a trend"
   await expect(page.getByText(/Lower observed performance/)).toBeVisible();
   await expect(page.getByText("0% overall", { exact: true })).toBeVisible();
 });
-test("voice discovery includes local de-DE and remote de-AT, remote is blocked by default", async ({
+test("voice selection persists and excludes all remote browser voices", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -313,21 +313,21 @@ test("voice discovery includes local de-DE and remote de-AT, remote is blocked b
     page.getByRole("option", { name: /Local German.*de-DE.*local/ }),
   ).toHaveCount(1);
   await expect(
-    page.getByRole("option", { name: /Austrian remote.*de-AT.*REMOTE/ }),
-  ).toHaveCount(1);
+    page.getByRole("option", { name: /Austrian remote/ }),
+  ).toHaveCount(0);
+  await page.getByLabel("Preferred speaker").selectOption("local");
   await page
     .getByLabel("German voice", { exact: true })
-    .selectOption("remote-at");
-  await expect(page.getByRole("button", { name: "Test voice" })).toBeDisabled();
-  await expect(
-    page.getByLabel("Allow selected remote browser voices"),
-  ).not.toBeChecked();
+    .selectOption("local-de");
   await page.reload();
   await settings(page);
   await expect(page.getByLabel("German voice", { exact: true })).toHaveValue(
-    "remote-at",
+    "local-de",
   );
-  await expect(page.getByRole("button", { name: "Test voice" })).toBeDisabled();
+  await expect(page.getByLabel("Preferred speaker")).toHaveValue("local");
+  await expect(
+    page.getByRole("button", { name: "Test Frau Helga's voice" }),
+  ).toBeEnabled();
 });
 test("recording produces a consent-gated replay clip and discards all resources", async ({
   page,

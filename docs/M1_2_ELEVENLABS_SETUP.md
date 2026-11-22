@@ -1,3 +1,5 @@
+> Historical M1.2 setup. Step 5 adds private disk persistence and browser offline storage; stopping the server now clears only its memory cache. Follow [Step 5 setup and acceptance](M2_STEP5_ACCEPTANCE.md) for this branch.
+
 # M1.2: optional local ElevenLabs speech
 
 External speech is OFF by default. No key, voice ID, paid service, deployment, transcription, or real email is included in this public repository. The selected voice belongs in private runtime configuration only. A voice ID alone cannot synthesize speech.

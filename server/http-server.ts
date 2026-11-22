@@ -51,7 +51,7 @@ export function createVoiceServer(
     }
     const now = Date.now();
     requests = requests.filter((t) => now - t < 60000);
-    if (requests.length >= 20) {
+    if (requests.length >= 120) {
       fail("rate_limit", 429);
       return;
     }
@@ -74,15 +74,12 @@ export function createVoiceServer(
         if (
           !raw ||
           typeof raw !== "object" ||
-          (raw as { consent?: boolean }).consent !== true
+          ((raw as { consent?: boolean }).consent !== true &&
+            (raw as { local?: boolean }).local !== true)
         )
           throw new VoiceError("consent_required", 403);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ ...service.status(), token }));
-        return;
-      }
-      if (req.url !== "/api/voice/speak") {
-        fail("invalid_request", 404);
         return;
       }
       const received = req.headers["x-voice-session"];
@@ -92,6 +89,36 @@ export function createVoiceServer(
         !timingSafeEqual(Buffer.from(received), Buffer.from(token))
       )
         throw new VoiceError("authorization", 403);
+      if (
+        req.url === "/api/voice/cache/info" ||
+        req.url === "/api/voice/cache/clear"
+      ) {
+        if (req.url.endsWith("clear")) {
+          if ((raw as { confirm?: boolean })?.confirm !== true)
+            throw new VoiceError("invalid_request");
+          service.deleteSaved();
+        }
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(service.savedInfo()));
+        return;
+      }
+      if (req.url === "/api/voice/cache/read") {
+        const audio = service.readSaved((raw as { text?: unknown })?.text);
+        if (!audio) {
+          fail("unavailable", 404);
+          return;
+        }
+        res.writeHead(200, {
+          "Content-Type": "audio/mpeg",
+          "X-Voice-Cache": "hit",
+        });
+        res.end(audio);
+        return;
+      }
+      if (req.url !== "/api/voice/speak") {
+        fail("invalid_request", 404);
+        return;
+      }
       const result = await service.speak(raw);
       res.writeHead(200, {
         "Content-Type": "audio/mpeg",

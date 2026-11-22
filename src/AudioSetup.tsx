@@ -7,7 +7,8 @@ export function AudioSetup({ onSettings }: { onSettings: () => void }) {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [notice, setNotice] = useState("");
   useEffect(() => {
-    const refresh = () => setVoices(browserSpeechProvider.voices());
+    const refresh = () =>
+      setVoices(browserSpeechProvider.voices().filter((v) => v.localService));
     refresh();
     if (typeof speechSynthesis === "undefined") return;
     speechSynthesis.addEventListener("voiceschanged", refresh);

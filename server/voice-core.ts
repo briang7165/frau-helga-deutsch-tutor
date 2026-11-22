@@ -5,6 +5,7 @@ import {
   type VoiceErrorCode,
 } from "../shared/voice-contract.js";
 export const MODEL = "eleven_multilingual_v2";
+import type { SavedAudio } from "./saved-audio.js";
 export class VoiceError extends Error {
   constructor(
     public code: VoiceErrorCode,
@@ -84,6 +85,7 @@ export class VoiceService {
     private ledger: UsageLedger,
     private upstream: Fetcher = fetch,
     private now: () => Date = () => new Date(),
+    private saved?: SavedAudio,
   ) {}
   status() {
     return {
@@ -93,7 +95,38 @@ export class VoiceService {
         /^[A-Za-z0-9]{10,80}$/.test(this.config.voiceId),
       sessionUsed: this.used,
       limits,
+      cacheNamespace: this.saved?.namespace ?? "session-only",
     };
+  }
+  savedInfo() {
+    try {
+      return {
+        namespace: this.saved?.namespace ?? "session-only",
+        ...(this.saved?.info() ?? { count: 0, bytes: 0, texts: [] }),
+      };
+    } catch {
+      throw new VoiceError("configuration", 503);
+    }
+  }
+  readSaved(text: unknown, includeMemory = true) {
+    const normalized = validateVoiceRequest({ text, consent: true });
+    try {
+      return (
+        this.saved?.get(normalized) ??
+        (includeMemory ? this.cache.get(normalized) : undefined)
+      );
+    } catch {
+      throw new VoiceError("configuration", 503);
+    }
+  }
+  deleteSaved() {
+    if (this.busy) throw new VoiceError("busy", 409);
+    try {
+      this.saved?.clear();
+      this.cache.clear();
+    } catch {
+      throw new VoiceError("configuration", 503);
+    }
   }
   private async json(path: string, signal: AbortSignal): Promise<any> {
     const r = await this.upstream(`https://api.elevenlabs.io/v1/${path}`, {
@@ -108,6 +141,8 @@ export class VoiceService {
   }
   async speak(raw: unknown): Promise<{ audio: Uint8Array; cached: boolean }> {
     const text = validateVoiceRequest(raw);
+    const saved = this.readSaved(text, false);
+    if (saved) return { audio: saved, cached: true };
     if (!this.config.enabled) throw new VoiceError("disabled", 403);
     if (!this.status().configured) throw new VoiceError("configuration", 503);
     const time = this.now().getTime();
@@ -212,6 +247,12 @@ export class VoiceService {
       if (this.cache.size >= limits.cacheEntries)
         this.cache.delete(this.cache.keys().next().value!);
       this.cache.set(text, audio);
+      // Do not retry or discard successfully generated audio if disk is full.
+      try {
+        this.saved?.put(text, audio);
+      } catch {
+        /* Playback remains possible; no retry. */
+      }
       return { audio, cached: false };
     } catch (error) {
       if (error instanceof VoiceError) throw error;

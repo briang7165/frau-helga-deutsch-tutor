@@ -7,6 +7,9 @@ import {
 } from "react";
 export type Settings = {
   version: 1;
+  voiceProvider: "helga" | "local" | "text";
+  voiceMuted: boolean;
+  saveLessonAudio: boolean;
   compact: boolean;
   sidebarCollapsed: boolean;
   sfx: boolean;
@@ -36,6 +39,9 @@ export type Settings = {
 export const settingsKey = "frau-helga-settings-v1";
 export const defaults: Settings = {
   version: 1,
+  voiceProvider: "helga",
+  voiceMuted: false,
+  saveLessonAudio: false,
   compact: true,
   sidebarCollapsed: true,
   sfx: false,
@@ -97,6 +103,7 @@ export function validateSettings(raw: unknown): Settings {
     s.difficulty !== "A2" ||
     s.explanationLanguage !== "English" ||
     !["brief", "detailed"].includes(s.detail) ||
+    !["helga", "local", "text"].includes(s.voiceProvider) ||
     s.voiceURI.length > 500
   )
     throw Error("Unsupported settings");

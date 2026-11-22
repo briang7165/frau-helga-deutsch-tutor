@@ -392,6 +392,17 @@ describe("durable count-only quota ledger", () => {
         body: JSON.stringify(request),
       });
       expect(denied.status).toBe(403);
+      for (const path of ["cache/info", "cache/read", "cache/clear"]) {
+        expect(
+          (
+            await fetch(base + "/api/voice/" + path, {
+              method: "POST",
+              headers,
+              body: "{}",
+            })
+          ).status,
+        ).toBe(403);
+      }
       const session = await fetch(base + "/api/voice/session", {
         method: "POST",
         headers,
@@ -401,6 +412,28 @@ describe("durable count-only quota ledger", () => {
       expect(body).not.toContain(config.apiKey);
       expect(body).not.toContain(config.voiceId);
       expect(JSON.parse(body).enabled).toBe(false);
+      const authorized = {
+        ...headers,
+        "X-Voice-Session": JSON.parse(body).token,
+      };
+      expect(
+        (
+          await fetch(base + "/api/voice/cache/clear", {
+            method: "POST",
+            headers: authorized,
+            body: "{}",
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await fetch(base + "/api/voice/cache/info", {
+            method: "POST",
+            headers: authorized,
+            body: "{}",
+          })
+        ).status,
+      ).toBe(200);
       expect(f).not.toHaveBeenCalled();
     } finally {
       server.closeAllConnections();

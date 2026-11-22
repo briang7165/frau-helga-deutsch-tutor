@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { VoiceService } from "./voice-core.js";
 import { FileUsageLedger } from "./usage-ledger.js";
 import { createVoiceServer } from "./http-server.js";
+import { FileSavedAudio } from "./saved-audio.js";
+import { MODEL } from "./voice-core.js";
 const directory = resolve("private");
 mkdirSync(directory, { recursive: true });
 const lock = resolve(directory, "voice-server.lock");
@@ -18,6 +20,14 @@ try {
       voiceId: process.env.ELEVENLABS_VOICE_ID ?? "",
     },
     new FileUsageLedger(resolve(directory, "voice-usage.json")),
+    undefined,
+    undefined,
+    new FileSavedAudio(
+      resolve(directory, "voice-cache-v1"),
+      process.env.ELEVENLABS_VOICE_ID ?? "",
+      MODEL,
+      process.env.VOICE_CACHE_REUSE_ALLOWED === "true",
+    ),
   );
   const server = createVoiceServer(
     service,

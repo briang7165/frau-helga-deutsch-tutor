@@ -1,16 +1,15 @@
 # Frau Helga — Deutsch Coach
 
-A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestones 1 and 1.1 are approved and merged into `main` (PRs #1 and #3). The ElevenLabs voice integration is draft PR #5, not yet reconciled with current `main`. No cloud deployment or live microphone transcription is enabled.
+A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestones 1 and 1.1 are approved and merged into `main` (PRs #1 and #3). This Step 5 review branch reconciles draft PR #5 with current `main` and adds persistent, private saved audio with local German/text fallback. No cloud deployment or live microphone transcription is enabled.
 
-The post-test classroom pass adds a compact layout with a collapsible navigation rail and teacher desk, concise English directions, intent-aware reading feedback, and a focused Check → Continue / Try again flow. Drafts survive Settings and pause in memory; first-attempt grades stay fixed. The audio setup check separates effects, installed voices, local recording and unavailable speech recognition. See the [updated acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for 61 unit tests, 27 Firefox tests, viewport evidence and manual audio limitations. PR #5 remains separate and needs a conflict-safe update from current `main`.
+The post-test classroom pass adds a compact layout with a collapsible navigation rail and teacher desk, concise English directions, intent-aware reading feedback, and a focused Check → Continue / Try again flow. Drafts survive Settings and pause in memory; first-attempt grades stay fixed. The audio setup check separates effects, installed voices, local recording and unavailable speech recognition. See the [updated acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for 61 unit tests, 27 Firefox tests, viewport evidence and manual audio limitations. PR #5 remains unchanged; its implementation is reconciled here. See [Step 5 acceptance and Windows setup](docs/M2_STEP5_ACCEPTANCE.md).
 
 ## Run locally on Windows
 
 Use Node.js 22.12+ and npm. From your repository folder:
 
 ```powershell
-git switch main
-git pull
+git switch feature/m2-5-voice-fallback
 npm.cmd ci
 npm.cmd run dev
 ```
@@ -37,7 +36,7 @@ Firefox tests start their own local server on port **4173**, independently of yo
 - Earn XP, Goldsterne and practice badges; see streaks and a weekly challenge. XP never changes grades. Skipping every activity earns no XP. Original synthesized effects are off/muted by default, have global mute/volume controls, and respect the user's sound choice. Motion respects both app and system preferences.
 - Optional progress checks become due after seven calendar days or five lessons by default. Four original deterministic forms rotate across the five skills. Comparisons show assessed coverage and skill-specific needs; results remain self-assessed/non-certified.
 - Firefox recording includes permission/device diagnostics, input level and duration, local replay with consent, and explicit discard. Hold with the pointer or Space/Enter; release stops recording. Clips are memory-only, discarded on pause/navigation/tab departure, and never uploaded. **There is no automatic transcription or pronunciation assessment.** Manual text is always available.
-- German voice discovery includes de-DE, de-AT and de-CH. Local/remote labels, persisted selection and preview controls are available. Remote browser voices are blocked unless deliberately selected and explicitly allowed in Settings. No Gemini, ElevenLabs or paid provider is configured.
+- German voice discovery includes de-DE, de-AT and de-CH. Only installed local German voices are eligible for browser speech. Settings provide saved-first Frau Helga, local-only and text-only choices. ElevenLabs is separately consented and server-gated, disabled by default; no paid service is activated.
 - German spellcheck and English spellcheck have separate controls. Firefox needs an installed dictionary; the input language attribute cannot install it. Turn German spellcheck off if English red squiggles are distracting.
 - Every completed session has an outcome-based **PREVIEW — NOT SENT** report, with assessed and unassessed work clearly separated. Nothing is emailed.
 
@@ -57,6 +56,6 @@ M2 private-beta work is now tracked in [Issue #6](https://github.com/briang7165/
 
 ## Development and privacy
 
-Read `AGENTS.md`, `CODEX_M2_PRIVATE_BETA_PROMPT.md`, `docs/M2_PRIVATE_BETA_RELEASE.md`, and the architecture/persona/privacy documents before editing. Existing M1.2 draft PR #5 must be reconciled with the newly merged M1.1 `main` without overwriting newer classroom files. Build separate reviewable PRs for STT and protected deployment.
+Read `AGENTS.md`, `CODEX_M2_PRIVATE_BETA_PROMPT.md`, `docs/M2_PRIVATE_BETA_RELEASE.md`, and the architecture/persona/privacy documents before editing. This branch preserves the merged M1.1 classroom while reconciling the M1.2 voice implementation. Build separate reviewable PRs for STT and protected deployment.
 
 This repository is public by user choice. Never commit learner records, transcripts, microphone recordings, family email addresses, credentials, private messages, OneDrive exports or copyrighted textbooks. The original specification example JSON is fictional, and its illustrative scores are never imported as learner achievements.

@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { browserSpeechProvider as speech } from "./providers";
+
 import { useSettings } from "./preferences";
 import { clock } from "./domain";
-import { ExternalSpeechControls } from "./external-voice/controls";
+import { VoicePlayback } from "./external-voice/controls";
 export function VoiceControls({
   text,
   preview = false,
@@ -10,101 +10,7 @@ export function VoiceControls({
   text: string;
   preview?: boolean;
 }) {
-  const { settings: s, update } = useSettings();
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [notice, setNotice] = useState("");
-  useEffect(() => {
-    const refresh = () => setVoices(speech.voices());
-    refresh();
-    if (typeof speechSynthesis !== "undefined")
-      speechSynthesis.addEventListener("voiceschanged", refresh);
-    return () => {
-      speech.stop();
-      if (typeof speechSynthesis !== "undefined")
-        speechSynthesis.removeEventListener("voiceschanged", refresh);
-    };
-  }, []);
-  useEffect(() => {
-    speech.stop();
-  }, [s.voiceEnabled, s.voiceVolume, s.rate, s.voiceURI, s.allowRemote]);
-  const chosen =
-    voices.find((v) => v.voiceURI === s.voiceURI) ??
-    (!s.voiceURI ? voices.find((v) => v.localService) : undefined);
-  return (
-    <div className="voice-controls">
-      {!preview && (
-        <ExternalSpeechControls
-          text={text}
-          options={{
-            enabled: s.voiceEnabled,
-            volume: s.voiceVolume,
-            rate: s.rate,
-            voiceURI: s.voiceURI,
-          }}
-        />
-      )}
-      <label>
-        German voice
-        <select
-          aria-label="German voice"
-          value={chosen?.voiceURI ?? ""}
-          onChange={(e) => update({ voiceURI: e.target.value })}
-        >
-          <option value="">Choose a German voice</option>
-          {voices.map((v) => (
-            <option key={v.voiceURI} value={v.voiceURI}>
-              {v.name} · {v.lang} ·{" "}
-              {v.localService ? "local" : "REMOTE — requires consent"}
-            </option>
-          ))}
-        </select>
-      </label>
-      {!voices.length && (
-        <p>
-          No German voice found. Text always works. In Windows Settings → Time &
-          language → Speech, install a German voice, then restart Firefox.
-          Availability depends on Firefox and the operating system.
-        </p>
-      )}
-      {s.voiceURI && !chosen && (
-        <p>
-          Your saved voice is unavailable on this device. Choose another voice
-          or use text.
-        </p>
-      )}
-      {chosen && !chosen.localService && (
-        <p className="warning">
-          Remote browser voice: text may leave this device. It is blocked unless
-          you explicitly allow remote voices in Settings.
-        </p>
-      )}
-      <button
-        type="button"
-        disabled={
-          !chosen || !s.voiceEnabled || (!chosen.localService && !s.allowRemote)
-        }
-        onClick={() =>
-          setNotice(
-            speech.speak(text, chosen?.voiceURI ?? "", {
-              allowRemote: s.allowRemote,
-              volume: s.voiceVolume,
-              rate: s.rate,
-              enabled: s.voiceEnabled,
-            })
-              ? "Voice requested. If silent, try another installed voice or use text."
-              : "Voice unavailable. Use the visible text.",
-          )
-        }
-      >
-        {preview ? "Test voice" : "Listen in German"}
-      </button>
-      <button type="button" onClick={() => speech.stop()}>
-        Stop voice
-      </button>
-      {!s.voiceEnabled && <p>Spoken voice is off in Settings.</p>}
-      {notice && <p role="status">{notice}</p>}
-    </div>
-  );
+  return <VoicePlayback text={text} test={preview} />;
 }
 export function MicrophoneControls() {
   const { settings, update } = useSettings();
