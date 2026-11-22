@@ -1,16 +1,16 @@
 # Frau Helga — Deutsch Coach
 
-A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestone 1 is approved and merged. **Milestone 1.1 is implemented on `feature/m1-1-learning-ux` and awaits pull-request review.** No deployment or live services.
+A local German tutor for a self-assessed A2 learner. Frau Helga is strict but kind, precise and quietly funny. Milestones 1 and 1.1 are approved and merged into `main` (PRs #1 and #3). The ElevenLabs voice integration is draft PR #5, not yet reconciled with current `main`. No cloud deployment or live microphone transcription is enabled.
 
-The post-test classroom pass adds a compact layout with a collapsible navigation rail and teacher desk, concise English directions, intent-aware reading feedback, and a focused Check → Continue / Try again flow. Drafts survive Settings and pause in memory; first-attempt grades stay fixed. The audio setup check separates effects, installed voices, local recording and unavailable speech recognition. See the [updated acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for 61 unit tests, 27 Firefox tests, viewport evidence and manual audio limitations. PR #5 remains separate and unchanged.
+The post-test classroom pass adds a compact layout with a collapsible navigation rail and teacher desk, concise English directions, intent-aware reading feedback, and a focused Check → Continue / Try again flow. Drafts survive Settings and pause in memory; first-attempt grades stay fixed. The audio setup check separates effects, installed voices, local recording and unavailable speech recognition. See the [updated acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for 61 unit tests, 27 Firefox tests, viewport evidence and manual audio limitations. PR #5 remains separate and needs a conflict-safe update from current `main`.
 
 ## Run locally on Windows
 
 Use Node.js 22.12+ and npm. From your repository folder:
 
 ```powershell
-git fetch origin
-git switch feature/m1-1-learning-ux
+git switch main
+git pull
 npm.cmd ci
 npm.cmd run dev
 ```
@@ -53,10 +53,10 @@ See [M1.1 acceptance report](docs/M1_1_ACCEPTANCE_REPORT.md) for the changed-fil
 
 The local dictionary and grading rules are deliberately bounded. Other valid wording may need review; no live reviewer or AI receives it. Assessment forms eventually repeat. Real microphone quality, audible voice quality and installed spellcheck dictionaries need a check on your device. Free-text drafts are not persisted; abrupt closure can lose the last partial second of elapsed time.
 
-M2+ authentication, live AI, real audio transcription, authorized email/feedback, cloud storage, OneDrive and Android work remain unstarted. No merge or deployment without user review. A future $5/month ceiling is not permission to activate billing.
+M2 private-beta work is now tracked in [Issue #6](https://github.com/briang7165/frau-helga-deutsch-tutor/issues/6), [release specification](docs/M2_PRIVATE_BETA_RELEASE.md) and [Codex prompt](CODEX_M2_PRIVATE_BETA_PROMPT.md). Real speech transcription, protected cloud hosting, authorized email/feedback, OneDrive sync and Android packaging are not released. No cloud deployment or paid API activation without specific authorization; the $5/month preference does not permit spending automatically.
 
 ## Development and privacy
 
-Read `AGENTS.md`, `CODEX_MILESTONE_1_1_PROMPT.md`, the M1.1 requirements and the architecture/persona/privacy documents before editing. Work on `feature/m1-1-learning-ux` from main and open a PR for review.
+Read `AGENTS.md`, `CODEX_M2_PRIVATE_BETA_PROMPT.md`, `docs/M2_PRIVATE_BETA_RELEASE.md`, and the architecture/persona/privacy documents before editing. Existing M1.2 draft PR #5 must be reconciled with the newly merged M1.1 `main` without overwriting newer classroom files. Build separate reviewable PRs for STT and protected deployment.
 
 This repository is public by user choice. Never commit learner records, transcripts, microphone recordings, family email addresses, credentials, private messages, OneDrive exports or copyrighted textbooks. The original specification example JSON is fictional, and its illustrative scores are never imported as learner achievements.
