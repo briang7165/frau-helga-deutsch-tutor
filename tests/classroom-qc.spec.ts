@@ -116,6 +116,16 @@ test("audio setup honestly separates four capabilities and requires sound opt-in
       },
     }),
   );
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "AudioContext", {
+      value: class {
+        state = "suspended";
+        resume() {
+          return new Promise<void>(() => {});
+        }
+      },
+    });
+  });
   await reading(page);
   await page
     .getByText("Audio setup check · sounds, voice & microphone", {

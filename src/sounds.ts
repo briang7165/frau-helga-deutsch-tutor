@@ -25,7 +25,21 @@ export class SoundPlayer {
     try {
       const token = this.generation;
       this.context ??= new AudioContext();
-      await this.context.resume();
+      // Firefox can leave resume pending when the output device is unavailable.
+      // Bound the diagnostic and never play a late tone after the timeout.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let resumed: boolean;
+      try {
+        resumed = await Promise.race([
+          this.context.resume().then(() => true),
+          new Promise<false>((resolve) => {
+            timer = setTimeout(() => resolve(false), 1500);
+          }),
+        ]);
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!resumed) return false;
       if (this.context?.state === "suspended") return false;
       if (token !== this.generation || !this.context) return false;
       const oscillator = this.context.createOscillator(),

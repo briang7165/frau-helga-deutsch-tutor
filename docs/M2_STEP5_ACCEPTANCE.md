@@ -59,10 +59,10 @@ Rollback: stop the new server/dev process and launch the preserved main checkout
 
 - Dependency install: PASS, locked `npm.cmd ci`.
 - Frontend and voice-server typechecks: PASS.
-- Unit tests: PASS, 136 tests including unchanged free-tier/deprecated-field cases, persistence, cache isolation, private-file preservation, zero-credit hits, consent, failures and cancellation.
+- Unit tests: PASS, 137 tests including unchanged free-tier/deprecated-field cases, persistence, cache isolation, private-file preservation, zero-credit hits, consent, failures and cancellation.
 - Firefox: PASS, 35 tests including all compact classroom/progress/grading cases.
 - Process persistence proof: a real child Node server generated one mock clip; a fresh process with live disabled replayed it with total mock synthesis count still one. Download, browser reload and offline replay produced zero voice requests. Confirm/cancel clearing and local-only voice selection passed.
 - Physical microphone, audible OS/ElevenLabs quality, installed dictionaries, live provider and billing: NOT RUN. Browser Audio/speech and provider responses are mocked; this is not an audible quality claim.
 - Screenshots: `outputs/m2-step5/` beside the work directory, including compact classroom/feedback at 1100x650, 1280x720, 1366x768, 1920x1080 and 390x844, plus Settings. Earlier classroom evidence remains untouched.
 
-Production build: PASS. Client bundle secret scan: PASS, including the locally configured private voice identity. Dependency audit: PASS, zero vulnerabilities. Remote CI status is recorded in the PR handoff after pushing. No merge, deployment, external generation, real email or paid activation occurred. Next separate ticket: Step 6 German speech-to-text with explicit per-use consent, editable transcript and independent free-tier protection.
+Production build: PASS. Client bundle secret scan: PASS, including the locally configured private voice identity. Dependency audit: PASS, zero vulnerabilities. The initial Linux CI run exposed a hung Firefox AudioContext.resume speaker diagnostic; it is now bounded to 1.5 seconds, with a deterministic pending-resume browser case and a no-late-tone unit regression. Final remote CI status is recorded in the PR handoff. No merge, deployment, external generation, real email or paid activation occurred. Next separate ticket: Step 6 German speech-to-text with explicit per-use consent, editable transcript and independent free-tier protection.
