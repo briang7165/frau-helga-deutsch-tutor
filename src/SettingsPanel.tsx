@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useSettings, validateSettings } from "./preferences";
 import { decodeState } from "./persistence";
 import type { State } from "./domain";
-import { VoiceControls, MicrophoneControls } from "./SpeechControls";
+import { MicrophoneControls } from "./SpeechControls";
 import { sounds } from "./sounds";
+import { ExternalVoiceSettings } from "./external-voice/controls";
 export function SettingsPanel({
   state,
   onImport,
@@ -133,63 +134,10 @@ export function SettingsPanel({
         <button onClick={() => void sounds.play("success", s)}>
           Test sound
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={s.voiceEnabled}
-            onChange={(e) => update({ voiceEnabled: e.target.checked })}
-          />
-          Enable spoken voice
-        </label>
-        <label>
-          Voice volume: {s.voiceVolume}%
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={s.voiceVolume}
-            onChange={(e) => update({ voiceVolume: +e.target.value })}
-          />
-        </label>
-        <label>
-          Speaking rate: {s.rate}
-          <input
-            type="range"
-            min="0.5"
-            max="1.5"
-            step="0.05"
-            value={s.rate}
-            onChange={(e) => update({ rate: +e.target.value })}
-          />
-        </label>
       </fieldset>
+      <ExternalVoiceSettings />
       <fieldset>
-        <legend>Voice & microphone</legend>
-        <p>
-          Local German voices are preferred. Remote browser voices may send
-          spoken text to the browser vendor; no external voice is enabled
-          automatically.
-        </p>
-        <label>
-          <input
-            type="checkbox"
-            checked={s.allowRemote}
-            onChange={(e) => {
-              if (
-                !e.target.checked ||
-                window.confirm(
-                  "Allow explicitly selected remote browser voices to process spoken text outside this device?",
-                )
-              )
-                update({ allowRemote: e.target.checked });
-            }}
-          />
-          Allow selected remote browser voices
-        </label>
-        <VoiceControls
-          text="Guten Tag. Wir lernen Schritt für Schritt."
-          preview
-        />
+        <legend>Test microphone — local diagnostic</legend>
         <MicrophoneControls />
       </fieldset>
       <fieldset>

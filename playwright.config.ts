@@ -6,7 +6,7 @@ export default defineConfig({
   use: { baseURL: "http://127.0.0.1:4173", trace: "retain-on-failure" },
   projects: [{ name: "firefox", use: { ...devices["Desktop Firefox"] } }],
   webServer: {
-    command: "npm run dev -- --port 4173 --strictPort",
+    command: "npm run voice:build && npm run dev -- --port 4173 --strictPort",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: false,
   },

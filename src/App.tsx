@@ -951,7 +951,7 @@ export default function App() {
             </>
           )}
           <footer className="privacy-footer">
-            <p>Local M1.1 · No live AI · No email sent · No audio persisted</p>
+            <p>Local tutor · No email sent · Learner recordings stay temporary · Saved lesson audio is managed in Settings</p>
             <button className="text-button" onClick={deleteProgress}>
               Clear local progress
             </button>

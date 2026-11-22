@@ -25,7 +25,7 @@ for (const [width, height] of [
         ),
       ).toBe(true);
     await page.screenshot({
-      path: `../../outputs/qc-after-${width}.png`,
+      path: `../../outputs/m2-step5/qc-after-${width}.png`,
       fullPage: true,
     });
     await page.locator("#answer").fill(example);
@@ -37,7 +37,7 @@ for (const [width, height] of [
       "afternoon, not at night",
     );
     await page.screenshot({
-      path: `../../outputs/qc-after-feedback-${width}.png`,
+      path: `../../outputs/m2-step5/qc-after-feedback-${width}.png`,
       fullPage: true,
     });
     expect(
@@ -116,6 +116,16 @@ test("audio setup honestly separates four capabilities and requires sound opt-in
       },
     }),
   );
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "AudioContext", {
+      value: class {
+        state = "suspended";
+        resume() {
+          return new Promise<void>(() => {});
+        }
+      },
+    });
+  });
   await reading(page);
   await page
     .getByText("Audio setup check · sounds, voice & microphone", {

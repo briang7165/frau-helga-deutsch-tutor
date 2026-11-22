@@ -1,0 +1,13 @@
+# Future Worker speech adapter — design only
+
+This document does not authorize deployment, paid services, OAuth setup or a live API call. The local Node adapter is not suitable for public hosting. There is no Worker configuration or cloud provisioning in M1.2.
+
+Keep the browser `SpeechOutputProvider` and same-origin `/api/voice/session` and `/api/voice/speak` contract. Replace the loopback trust boundary with verified Google ID tokens (signature, issuer, audience, expiry and nonce) and an explicit owner Google `sub` allowlist. Issue short-lived secure HttpOnly SameSite sessions; verify CSRF tokens and Origin on mutations. Reject unauthenticated requests before all provider or quota work. Do not trust client-supplied identity, cost, model, voice or limit values.
+
+Store the API key and selected voice ID in Worker secret bindings, never static assets or public configuration. Keep the selected model, original-text allowlist, bounded requests and safe errors on the server. Retain a default-off environment kill switch and per-session explicit browser consent; never infer consent from login. No browser or microphone audio is accepted.
+
+Implement the UsageLedger interface with atomic durable reservations per authorized subject, account, UTC day and month. Use a Durable Object or transactional D1 design that serializes check-and-reserve across all requests, plus rate limits and an account-wide concurrency cap. An isolate's memory cannot enforce global spending limits. Reserve uncertain/failed synthesis attempts, require an idempotency key bound to subject and request hash, and prevent retries from spending twice. Do not use client timestamps. Inspect free subscription quota and selected voice/model before synthesis; missing metadata or provider-side paid extensions must block.
+
+If ephemeral caching is retained, scope it by authorized subject and configured voice/model, impose an explicit short TTL and size bound, and prohibit shared CDN caching (`Cache-Control: no-store`). Persist no learner free text or audio by default. Logs should contain only sanitized codes, durations and aggregate character totals; exclude credentials, tokens, text, voice IDs, audio and upstream error bodies. Define deletion/retention policy before enabling any durable cache.
+
+Before a separately authorized deployment: test verified-token failures, allowlist denial, CSRF, replay, concurrent quota reservations, idempotency, cache isolation, missing secrets and provider failures with mocks. Require a security review, account spending controls and one explicitly authorized free-credit smoke test. Recheck provider licensing, billing and retention terms. Do not deploy until the owner approves both authentication and cost boundaries.
